@@ -35,6 +35,14 @@ This project has **strict test coverage requirements**:
 5. Use meaningful variable and function names
 6. Document complex logic with comments
 
+## Screenshot Guidelines
+**Important:** When including screenshots in PR comments or replies:
+- Use screenshot URLs provided in the conversation context
+- Format: `<img src="URL">` (HTML img tag, not Markdown syntax)
+- The system provides pre-uploaded GitHub CDN URLs (github.com/user-attachments/assets/)
+- Do NOT use locally saved playwright screenshots as they won't display in comments
+- Always reference existing screenshot URLs from the conversation when available
+
 ## Testing Best Practices
 - Test each class method individually
 - Test edge cases and boundary conditions
