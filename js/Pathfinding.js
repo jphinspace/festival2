@@ -186,6 +186,10 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         
         return { ...nextWaypoint, mode: 'astar' };
     }
+    
+    // Unreachable: mode is always 'bug' or 'astar'
+    // This explicit return satisfies exhaustiveness checking
+    throw new Error(`Invalid pathfinding mode: ${agentPathState.mode}`);
 }
 
 /**
@@ -221,7 +225,7 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
     
     while (openSet.length > 0 && expansions < MAX_EXPANSIONS) {
         // Get node with lowest fScore
-        openSet.sort((a, b) => (fScore.get(a.key) || Infinity) - (fScore.get(b.key) || Infinity));
+        openSet.sort((a, b) => fScore.get(a.key) - fScore.get(b.key));
         const current = openSet.shift();
         
         expansions++;
@@ -265,8 +269,9 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
             const moveCost = calculateDistance(0, 0, dir.dx, dir.dy);
             const tentativeGScore = (gScore.get(current.key) || Infinity) + moveCost;
             
-            // Check if this path is better
-            if (tentativeGScore < (gScore.get(neighborKey) || Infinity)) {
+            // Check if this path is better (neighbor not yet scored means Infinity)
+            const currentNeighborScore = gScore.get(neighborKey);
+            if (currentNeighborScore === undefined || tentativeGScore < currentNeighborScore) {
                 cameFrom.set(neighborKey, { x: current.x, y: current.y, key: current.key });
                 gScore.set(neighborKey, tentativeGScore);
                 fScore.set(neighborKey, tentativeGScore + heuristic(neighborX, neighborY));
