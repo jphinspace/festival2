@@ -369,10 +369,17 @@ describe('Agent', () => {
             };
         });
         
-        it('should set fillStyle to agent color', () => {
+        it('should set fillStyle to state color when in IdleState', () => {
             agent.draw(mockCtx);
             
-            expect(mockCtx.fillStyle).toBe(agent.color);
+            expect(mockCtx.fillStyle).toBe('#8B0000'); // Dark red for idle
+        });
+        
+        it('should set fillStyle to agent type color when in MovingState', () => {
+            agent.transitionTo(new MovingState(), 800, 600);
+            agent.draw(mockCtx);
+            
+            expect(mockCtx.fillStyle).toBe(agent.color); // Type color for moving
         });
         
         it('should call beginPath', () => {

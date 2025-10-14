@@ -36,6 +36,15 @@ export class AgentState {
     getName() {
         return this.constructor.name;
     }
+    
+    /**
+     * Returns the default color for this state
+     * @param {Agent} agent - The agent to get color for
+     * @returns {string|null} The color string, or null to use agent's type color
+     */
+    getColor(agent) {
+        return null; // Default: use agent's type color
+    }
 }
 
 // Idle state - agent remains stationary
@@ -60,6 +69,10 @@ export class IdleState extends AgentState {
             // Transition to MOVING
             agent.transitionTo(new MovingState(), canvasWidth, canvasHeight);
         }
+    }
+    
+    getColor(agent) {
+        return '#8B0000'; // Dark red for idle state
     }
 }
 

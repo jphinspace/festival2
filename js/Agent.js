@@ -82,8 +82,9 @@ export class Agent {
             ctx.stroke();
         }
         
-        // Draw agent
-        ctx.fillStyle = this.color;
+        // Draw agent - use state color if available, otherwise use type color
+        const stateColor = this.state ? this.state.getColor(this) : null;
+        ctx.fillStyle = stateColor || this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
