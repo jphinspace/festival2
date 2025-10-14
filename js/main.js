@@ -23,5 +23,12 @@ toggleButton.addEventListener('click', () => {
     toggleButton.textContent = isShowing ? 'Hide Destinations' : 'Show Destinations';
 });
 
+// Setup spawn agent button
+const spawnButton = document.getElementById('spawnAgent');
+
+spawnButton.addEventListener('click', () => {
+    simulation.spawnFanAgent();
+});
+
 // Start simulation
 simulation.run();
