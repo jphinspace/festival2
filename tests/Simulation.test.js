@@ -95,10 +95,10 @@ describe('Simulation', () => {
             expect(simulation.obstacles.length).toBe(4);
             
             // All obstacles should be in a vertical line (same x, different y)
-            // with original dimensions (40x80)
+            // with original square dimensions (40x40)
             simulation.obstacles.forEach(obstacle => {
                 expect(obstacle.width).toBe(40);
-                expect(obstacle.height).toBe(80);
+                expect(obstacle.height).toBe(40);
                 expect(obstacle.x).toBe(400); // All at horizontal center
             });
         });

@@ -21,23 +21,22 @@ export class Simulation {
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         const agentDiameter = 10; // agent radius = 5, diameter = 10
-        const stallWidth = 40; // 4 agent diameters
-        const stallHeight = 80; // 8 agent diameters (vertical orientation)
+        const obstacleSize = 40; // 4 agent diameters (agent radius = 5)
         const spacing = 2.5 * agentDiameter; // 25 pixels between stalls
         
         // Position 3rd stall at center, with 2 above and 1 below
         // Stall positions: 0, 1, 2 (at center), 3
         // Calculate Y positions relative to center
         const stall2Y = centerY; // 3rd stall (index 2) at center
-        const stall1Y = stall2Y - (stallHeight + spacing);
-        const stall0Y = stall1Y - (stallHeight + spacing);
-        const stall3Y = stall2Y + (stallHeight + spacing);
+        const stall1Y = stall2Y - (obstacleSize + spacing);
+        const stall0Y = stall1Y - (obstacleSize + spacing);
+        const stall3Y = stall2Y + (obstacleSize + spacing);
         
         const yPositions = [stall0Y, stall1Y, stall2Y, stall3Y];
         
         // Create 4 food stall obstacles in vertical line
         for (let i = 0; i < 4; i++) {
-            this.obstacles.push(new Obstacle(centerX, yPositions[i], stallWidth, stallHeight));
+            this.obstacles.push(new Obstacle(centerX, yPositions[i], obstacleSize, obstacleSize));
         }
     }
     
