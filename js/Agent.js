@@ -14,15 +14,15 @@ export class Agent {
         this.color = this.getColorForType(type);
         
         // State management
-        this.state = null;
+        this.state = new IdleState();
         this.idleTimer = 1000; // ticks until state change
         
         // Destination coordinates for pathfinding visualization
         this.destinationX = x;
         this.destinationY = y;
         
-        // Initialize to IDLE state
-        this.transitionTo(new IdleState());
+        // Initialize state
+        this.state.enter(this, 0, 0);
     }
     
     getColorForType(type) {
@@ -49,10 +49,8 @@ export class Agent {
      * @param {number} canvasWidth - Canvas width for state initialization
      * @param {number} canvasHeight - Canvas height for state initialization
      */
-    transitionTo(newState, canvasWidth = 0, canvasHeight = 0) {
-        if (this.state) {
-            this.state.exit(this);
-        }
+    transitionTo(newState, canvasWidth, canvasHeight) {
+        this.state.exit(this);
         this.state = newState;
         this.state.enter(this, canvasWidth, canvasHeight);
     }
@@ -82,9 +80,8 @@ export class Agent {
             ctx.stroke();
         }
         
-        // Draw agent - use state color if available, otherwise use type color
-        const stateColor = this.state ? this.state.getColor(this) : null;
-        ctx.fillStyle = stateColor || this.color;
+        // Draw agent using state color
+        ctx.fillStyle = this.state.getColor(this);
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();

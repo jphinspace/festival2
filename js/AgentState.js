@@ -38,12 +38,12 @@ export class AgentState {
     }
     
     /**
-     * Returns the default color for this state
+     * Returns the color for this state
      * @param {Agent} agent - The agent to get color for
-     * @returns {string|null} The color string, or null to use agent's type color
+     * @returns {string} The color string (magenta indicates unimplemented state)
      */
     getColor(agent) {
-        return null; // Default: use agent's type color
+        return 'magenta'; // Default: magenta for easy bug visibility
     }
 }
 
@@ -104,5 +104,9 @@ export class MovingState extends AgentState {
                 agent.y += dirY * speed * deltaTime;
             }
         }
+    }
+    
+    getColor(agent) {
+        return agent.color; // Use agent's type color when moving
     }
 }
