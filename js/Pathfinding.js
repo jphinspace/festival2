@@ -8,6 +8,76 @@
  */
 
 /**
+ * Calculate Euclidean distance between two points
+ * @param {number} x1 - First point X
+ * @param {number} y1 - First point Y
+ * @param {number} x2 - Second point X
+ * @param {number} y2 - Second point Y
+ * @returns {number} Euclidean distance
+ */
+export function calculateDistance(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Convert coordinates to grid key for A* search
+ * @param {number} x - X coordinate
+ * @param {number} y - Y coordinate
+ * @param {number} gridSize - Grid cell size
+ * @returns {string} Grid key
+ */
+export function getGridKey(x, y, gridSize) {
+    return `${Math.floor(x / gridSize)},${Math.floor(y / gridSize)}`;
+}
+
+/**
+ * Check if a position is valid (not colliding with obstacles)
+ * @param {number} x - X coordinate
+ * @param {number} y - Y coordinate
+ * @param {Array<Obstacle>} obstacles - Array of obstacles
+ * @param {number} agentRadius - Agent radius for collision checking
+ * @returns {boolean} True if position is valid
+ */
+export function isPositionValid(x, y, obstacles, agentRadius) {
+    for (const obstacle of obstacles) {
+        if (obstacle.collidesWith(x, y, agentRadius)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Reconstruct path from A* search results
+ * @param {Object} currentNode - Current node that reached the goal
+ * @param {Map} cameFrom - Map of nodes to their predecessors
+ * @param {number} goalX - Goal X coordinate
+ * @param {number} goalY - Goal Y coordinate
+ * @returns {Array<{x: number, y: number}>} Reconstructed path
+ */
+export function reconstructPath(currentNode, cameFrom, goalX, goalY) {
+    const path = [];
+    let pathKey = currentNode.key;
+    let pathNode = currentNode;
+    
+    while (cameFrom.has(pathKey)) {
+        path.unshift({ x: pathNode.x, y: pathNode.y });
+        const prev = cameFrom.get(pathKey);
+        pathKey = prev.key;
+        pathNode = prev;
+    }
+    
+    // Add goal as final waypoint
+    if (path.length > 0) {
+        path.push({ x: goalX, y: goalY });
+    }
+    
+    return path;
+}
+
+/**
  * Check if there's a clear line of sight between two points (no obstacles)
  * @param {number} x1 - Start X
  * @param {number} y1 - Start Y
@@ -19,9 +89,7 @@
  */
 export function hasLineOfSight(x1, y1, x2, y2, obstacles, agentRadius) {
     // Sample points along the line
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = calculateDistance(x1, y1, x2, y2);
     
     if (distance === 0) {
         return true;
@@ -29,6 +97,8 @@ export function hasLineOfSight(x1, y1, x2, y2, obstacles, agentRadius) {
     
     // Sample at regular intervals (every 2 pixels)
     const steps = Math.ceil(distance / 2);
+    const dx = x2 - x1;
+    const dy = y2 - y1;
     
     for (let i = 0; i <= steps; i++) {
         const t = i / steps;
@@ -100,9 +170,7 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         const nextWaypoint = agentPathState.path[agentPathState.pathIndex];
         
         // If we're close to the current waypoint, advance to next
-        const dx = nextWaypoint.x - currentX;
-        const dy = nextWaypoint.y - currentY;
-        const distToWaypoint = Math.sqrt(dx * dx + dy * dy);
+        const distToWaypoint = calculateDistance(currentX, currentY, nextWaypoint.x, nextWaypoint.y);
         
         if (distToWaypoint < 5) {
             agentPathState.pathIndex++;
@@ -137,25 +205,8 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
     const MAX_EXPANSIONS = 300;
     const GRID_SIZE = 10; // Grid cell size for discretization
     
-    // Helper to get grid key
-    const getKey = (x, y) => `${Math.floor(x / GRID_SIZE)},${Math.floor(y / GRID_SIZE)}`;
-    
-    // Helper to calculate heuristic (Euclidean distance)
-    const heuristic = (x, y) => {
-        const dx = goalX - x;
-        const dy = goalY - y;
-        return Math.sqrt(dx * dx + dy * dy);
-    };
-    
-    // Helper to check if position is valid (not in obstacle)
-    const isValid = (x, y) => {
-        for (const obstacle of obstacles) {
-            if (obstacle.collidesWith(x, y, agentRadius)) {
-                return false;
-            }
-        }
-        return true;
-    };
+    // Helper to calculate heuristic (Euclidean distance to goal)
+    const heuristic = (x, y) => calculateDistance(x, y, goalX, goalY);
     
     // Initialize open and closed sets
     const openSet = [];
@@ -164,7 +215,7 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
     const gScore = new Map();
     const fScore = new Map();
     
-    const startKey = getKey(startX, startY);
+    const startKey = getGridKey(startX, startY, GRID_SIZE);
     openSet.push({ x: startX, y: startY, key: startKey });
     gScore.set(startKey, 0);
     fScore.set(startKey, heuristic(startX, startY));
@@ -184,29 +235,10 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
         closedSet.add(current.key);
         
         // Check if we reached the goal (within grid cell)
-        const distToGoal = Math.sqrt(
-            (current.x - goalX) * (current.x - goalX) + 
-            (current.y - goalY) * (current.y - goalY)
-        );
+        const distToGoal = calculateDistance(current.x, current.y, goalX, goalY);
         if (distToGoal < GRID_SIZE * 2) {
             // Reconstruct path
-            const path = [];
-            let pathKey = current.key;
-            let pathNode = current;
-            
-            while (cameFrom.has(pathKey)) {
-                path.unshift({ x: pathNode.x, y: pathNode.y });
-                const prev = cameFrom.get(pathKey);
-                pathKey = prev.key;
-                pathNode = prev;
-            }
-            
-            // Add goal as final waypoint
-            if (path.length > 0) {
-                path.push({ x: goalX, y: goalY });
-            }
-            
-            return path;
+            return reconstructPath(current, cameFrom, goalX, goalY);
         }
         
         // Explore neighbors (8-directional)
@@ -224,7 +256,7 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
         for (const dir of directions) {
             const neighborX = current.x + dir.dx;
             const neighborY = current.y + dir.dy;
-            const neighborKey = getKey(neighborX, neighborY);
+            const neighborKey = getGridKey(neighborX, neighborY, GRID_SIZE);
             
             // Skip if already explored
             if (closedSet.has(neighborKey)) {
@@ -232,12 +264,12 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
             }
             
             // Skip if invalid position
-            if (!isValid(neighborX, neighborY)) {
+            if (!isPositionValid(neighborX, neighborY, obstacles, agentRadius)) {
                 continue;
             }
             
             // Calculate tentative gScore
-            const moveCost = Math.sqrt(dir.dx * dir.dx + dir.dy * dir.dy);
+            const moveCost = calculateDistance(0, 0, dir.dx, dir.dy);
             const tentativeGScore = (gScore.get(current.key) || Infinity) + moveCost;
             
             // Check if this path is better
