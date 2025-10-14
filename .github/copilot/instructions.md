@@ -38,10 +38,10 @@ This project has **strict test coverage requirements**:
 ## Screenshot Guidelines
 **Important:** When including screenshots in PR comments or replies:
 - Use screenshot URLs provided in the conversation context
-- Format: `<img src="URL">` (HTML img tag, not Markdown syntax)
-- The system provides pre-uploaded GitHub CDN URLs (github.com/user-attachments/assets/)
+- The conversation context provides pre-uploaded GitHub CDN URLs (github.com/user-attachments/assets/)
+- Reference these URLs directly: `<img src="URL">`
 - Do NOT use locally saved playwright screenshots as they won't display in comments
-- Always reference existing screenshot URLs from the conversation when available
+- The syntax (HTML vs Markdown) doesn't matter - the key is using conversation-provided URLs
 
 ## Testing Best Practices
 - Test each class method individually
