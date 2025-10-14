@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #canvas {
+            border: 2px solid #333;
+            background-color: #90EE90;
+            display: block;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        #tickRateSlider {
+            width: 200px;
+            vertical-align: middle;
+        }
+        #tickRateValue {
+            display: inline-block;
+            width: 80px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="tickRateSlider">Simulation Speed:</label>
+        <input type="range" id="tickRateSlider" min="0.1" max="5" step="0.1" value="1">
+        <span id="tickRateValue">1.0x (1000 ticks/s)</span>
+    </div>
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <script>
+        // Agent class representing festival attendees
+        class Agent {
+            constructor(x, y, type = 'fan') {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.vx = (Math.random() - 0.5) * 100; // velocity in pixels per second
+                this.vy = (Math.random() - 0.5) * 100;
+                this.radius = 5;
+                
+                // Color based on type
+                this.color = this.getColorForType(type);
+            }
+            
+            getColorForType(type) {
+                switch(type) {
+                    case 'fan':
+                        return `hsl(${Math.random() * 360}, 70%, 50%)`;
+                    case 'security':
+                        return 'yellow';
+                    case 'performer':
+                        return 'red';
+                    default:
+                        return 'blue';
+                }
+            }
+            
+            // Frame-independent update
+            update(deltaTime, canvasWidth, canvasHeight) {
+                // Update position based on velocity and deltaTime
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+                
+                // Bounce off walls
+                if (this.x - this.radius < 0 || this.x + this.radius > canvasWidth) {
+                    this.vx = -this.vx;
+                    this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
+                }
+                if (this.y - this.radius < 0 || this.y + this.radius > canvasHeight) {
+                    this.vy = -this.vy;
+                    this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
+                }
+            }
+            
+            draw(ctx) {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Simulation class
+        class Simulation {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.agents = [];
+                this.tickRate = 1.0; // 1x = 1000 ticks per second
+                this.lastTime = performance.now();
+                this.running = true;
+                
+                this.init();
+            }
+            
+            init() {
+                // Create initial fan agents
+                const numFans = 50;
+                for (let i = 0; i < numFans; i++) {
+                    const x = Math.random() * this.canvas.width;
+                    const y = Math.random() * this.canvas.height;
+                    this.agents.push(new Agent(x, y, 'fan'));
+                }
+            }
+            
+            setTickRate(rate) {
+                this.tickRate = rate;
+            }
+            
+            update(currentTime) {
+                // Calculate deltaTime in seconds
+                const deltaTimeMs = currentTime - this.lastTime;
+                this.lastTime = currentTime;
+                
+                // Apply tick rate multiplier
+                // deltaTime is in seconds, adjusted by tick rate
+                const deltaTime = (deltaTimeMs / 1000) * this.tickRate;
+                
+                // Update all agents
+                for (const agent of this.agents) {
+                    agent.update(deltaTime, this.canvas.width, this.canvas.height);
+                }
+            }
+            
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw all agents
+                for (const agent of this.agents) {
+                    agent.draw(this.ctx);
+                }
+            }
+            
+            run() {
+                const loop = (currentTime) => {
+                    if (this.running) {
+                        this.update(currentTime);
+                        this.draw();
+                        requestAnimationFrame(loop);
+                    }
+                };
+                requestAnimationFrame(loop);
+            }
+        }
+        
+        // Initialize simulation
+        const canvas = document.getElementById('canvas');
+        const simulation = new Simulation(canvas);
+        
+        // Setup tick rate slider
+        const slider = document.getElementById('tickRateSlider');
+        const tickRateValue = document.getElementById('tickRateValue');
+        
+        slider.addEventListener('input', (e) => {
+            const rate = parseFloat(e.target.value);
+            simulation.setTickRate(rate);
+            const ticksPerSecond = Math.round(rate * 1000);
+            tickRateValue.textContent = `${rate.toFixed(1)}x (${ticksPerSecond} ticks/s)`;
+        });
+        
+        // Start simulation
+        simulation.run();
+    </script>
+</body>
+</html>
