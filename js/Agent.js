@@ -1,4 +1,4 @@
-import { AgentState } from './AgentState.js';
+import { IdleState } from './AgentState.js';
 
 // Agent class representing festival attendees
 export class Agent {
@@ -14,12 +14,15 @@ export class Agent {
         this.color = this.getColorForType(type);
         
         // State management
-        this.state = AgentState.IDLE;
+        this.state = null;
         this.idleTimer = 1000; // ticks until state change
         
         // Destination coordinates for pathfinding visualization
         this.destinationX = x;
         this.destinationY = y;
+        
+        // Initialize to IDLE state
+        this.transitionTo(new IdleState());
     }
     
     getColorForType(type) {
@@ -40,52 +43,24 @@ export class Agent {
         this.destinationY = Math.random() * canvasHeight;
     }
     
+    /**
+     * Transition to a new state
+     * @param {AgentState} newState - The new state to transition to
+     * @param {number} canvasWidth - Canvas width for state initialization
+     * @param {number} canvasHeight - Canvas height for state initialization
+     */
+    transitionTo(newState, canvasWidth = 0, canvasHeight = 0) {
+        if (this.state) {
+            this.state.exit(this);
+        }
+        this.state = newState;
+        this.state.enter(this, canvasWidth, canvasHeight);
+    }
+    
     // Frame-independent update
     update(deltaTime, canvasWidth, canvasHeight) {
-        // Calculate distance to destination
-        const dx = this.destinationX - this.x;
-        const dy = this.destinationY - this.y;
-        const distanceToDestination = Math.sqrt(dx * dx + dy * dy);
-        
-        // State machine logic
-        if (this.state === AgentState.MOVING) {
-            // Check if reached destination (within 5 units)
-            if (distanceToDestination <= 5) {
-                // Transition to IDLE
-                this.state = AgentState.IDLE;
-                this.idleTimer = 1000;
-                // Set destination to current location
-                this.destinationX = this.x;
-                this.destinationY = this.y;
-            } else {
-                // Continue moving towards destination
-                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                if (speed > 0 && distanceToDestination > 0) {
-                    // Normalize direction and apply velocity
-                    const dirX = dx / distanceToDestination;
-                    const dirY = dy / distanceToDestination;
-                    this.x += dirX * speed * deltaTime;
-                    this.y += dirY * speed * deltaTime;
-                }
-            }
-        } else {
-            // IDLE state (or any other state defaults to IDLE behavior)
-            // Decrement timer (deltaTime is in seconds, but timer is in ticks at 1000 ticks/sec)
-            // Convert deltaTime to ticks
-            const ticksElapsed = deltaTime * 1000;
-            this.idleTimer -= ticksElapsed;
-            
-            // Check if timer expired
-            if (this.idleTimer <= 0) {
-                // Ensure timer is exactly 0 if it went negative
-                if (this.idleTimer < 0) {
-                    this.idleTimer = 0;
-                }
-                // Transition to MOVING
-                this.state = AgentState.MOVING;
-                this.chooseRandomDestination(canvasWidth, canvasHeight);
-            }
-        }
+        // Delegate to current state
+        this.state.update(this, deltaTime, canvasWidth, canvasHeight);
         
         // Clamp position to canvas bounds
         this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));

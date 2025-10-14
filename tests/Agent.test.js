@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Agent } from '../js/Agent.js';
-import { AgentState } from '../js/AgentState.js';
+import { IdleState, MovingState } from '../js/AgentState.js';
 
 describe('Agent', () => {
     describe('constructor', () => {
@@ -37,10 +37,10 @@ describe('Agent', () => {
             expect(typeof agent.color).toBe('string');
         });
         
-        it('should initialize state to IDLE', () => {
+        it('should initialize state to IdleState', () => {
             const agent = new Agent(100, 200);
             
-            expect(agent.state).toBe(AgentState.IDLE);
+            expect(agent.state instanceof IdleState).toBe(true);
         });
         
         it('should initialize idleTimer to 1000', () => {
@@ -127,7 +127,8 @@ describe('Agent', () => {
         
         describe('IDLE state', () => {
             it('should not move when in IDLE state', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 500;
                 const initialX = agent.x;
                 const initialY = agent.y;
@@ -139,7 +140,8 @@ describe('Agent', () => {
             });
             
             it('should decrement idleTimer by ticks elapsed', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 1000;
                 
                 // deltaTime of 0.1 seconds = 100 ticks at 1000 ticks/sec
@@ -149,7 +151,8 @@ describe('Agent', () => {
             });
             
             it('should transition to MOVING when timer reaches 0', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 50;
                 agent.destinationX = agent.x;
                 agent.destinationY = agent.y;
@@ -157,12 +160,13 @@ describe('Agent', () => {
                 // deltaTime of 0.1 seconds = 100 ticks
                 agent.update(0.1, 800, 600);
                 
-                expect(agent.state).toBe(AgentState.MOVING);
+                expect(agent.state instanceof MovingState).toBe(true);
                 expect(agent.idleTimer).toBe(0);
             });
             
             it('should set idleTimer to 0 if it goes negative', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 10;
                 
                 // deltaTime of 0.1 seconds = 100 ticks
@@ -172,7 +176,8 @@ describe('Agent', () => {
             });
             
             it('should leave idleTimer at 0 if it is exactly 0 when timer expires', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 100;
                 agent.destinationX = agent.x;
                 agent.destinationY = agent.y;
@@ -181,11 +186,12 @@ describe('Agent', () => {
                 agent.update(0.1, 800, 600);
                 
                 expect(agent.idleTimer).toBe(0);
-                expect(agent.state).toBe(AgentState.MOVING);
+                expect(agent.state instanceof MovingState).toBe(true);
             });
             
             it('should choose new destination when transitioning to MOVING', () => {
-                agent.state = AgentState.IDLE;
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
                 agent.idleTimer = 50;
                 agent.destinationX = agent.x;
                 agent.destinationY = agent.y;
@@ -200,7 +206,8 @@ describe('Agent', () => {
         
         describe('MOVING state', () => {
             it('should move towards destination', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 200;
@@ -223,7 +230,8 @@ describe('Agent', () => {
             });
             
             it('should not move if speed is 0', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.vx = 0;
@@ -241,7 +249,8 @@ describe('Agent', () => {
             });
             
             it('should transition to IDLE when reaching destination', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 103;
@@ -249,11 +258,12 @@ describe('Agent', () => {
                 
                 agent.update(0.1, 800, 600);
                 
-                expect(agent.state).toBe(AgentState.IDLE);
+                expect(agent.state instanceof IdleState).toBe(true);
             });
             
             it('should reset idleTimer to 1000 when transitioning to IDLE', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 103;
@@ -266,7 +276,8 @@ describe('Agent', () => {
             });
             
             it('should set destination to current location when reaching destination', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 103;
@@ -279,7 +290,8 @@ describe('Agent', () => {
             });
             
             it('should consider within 5 units as reaching destination', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 104;
@@ -287,11 +299,12 @@ describe('Agent', () => {
                 
                 agent.update(0.1, 800, 600);
                 
-                expect(agent.state).toBe(AgentState.IDLE);
+                expect(agent.state instanceof IdleState).toBe(true);
             });
             
             it('should not transition if more than 5 units away', () => {
-                agent.state = AgentState.MOVING;
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
                 agent.x = 100;
                 agent.y = 100;
                 agent.destinationX = 110;
@@ -299,7 +312,7 @@ describe('Agent', () => {
                 
                 agent.update(0.1, 800, 600);
                 
-                expect(agent.state).toBe(AgentState.MOVING);
+                expect(agent.state instanceof MovingState).toBe(true);
             });
         });
         
@@ -313,7 +326,8 @@ describe('Agent', () => {
         });
         
         it('should clamp position to canvas bounds', () => {
-            agent.state = AgentState.MOVING;
+            agent.state = new MovingState();
+            agent.state.enter(agent, 800, 600);
             agent.x = 1;
             agent.y = 1;
             agent.destinationX = -100;
