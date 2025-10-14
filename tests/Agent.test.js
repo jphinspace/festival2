@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Agent } from '../js/Agent.js';
+import { IdleState, MovingState } from '../js/AgentState.js';
 
 describe('Agent', () => {
     describe('constructor', () => {
@@ -35,6 +36,18 @@ describe('Agent', () => {
             expect(agent.color).toBeDefined();
             expect(typeof agent.color).toBe('string');
         });
+        
+        it('should initialize state to IdleState', () => {
+            const agent = new Agent(100, 200);
+            
+            expect(agent.state instanceof IdleState).toBe(true);
+        });
+        
+        it('should initialize idleTimer to 1000', () => {
+            const agent = new Agent(100, 200);
+            
+            expect(agent.idleTimer).toBe(1000);
+        });
     });
     
     describe('getColorForType', () => {
@@ -69,6 +82,40 @@ describe('Agent', () => {
         });
     });
     
+    describe('chooseRandomDestination', () => {
+        let agent;
+        
+        beforeEach(() => {
+            agent = new Agent(100, 200);
+        });
+        
+        it('should set destination within canvas bounds', () => {
+            agent.chooseRandomDestination(800, 600);
+            
+            expect(agent.destinationX).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
+        });
+        
+        it('should change destination from current values', () => {
+            const initialDestX = agent.destinationX;
+            const initialDestY = agent.destinationY;
+            
+            // Run multiple times to ensure it changes (random)
+            let changed = false;
+            for (let i = 0; i < 10; i++) {
+                agent.chooseRandomDestination(800, 600);
+                if (agent.destinationX !== initialDestX || agent.destinationY !== initialDestY) {
+                    changed = true;
+                    break;
+                }
+            }
+            
+            expect(changed).toBe(true);
+        });
+    });
+    
     describe('update', () => {
         let agent;
         
@@ -78,15 +125,195 @@ describe('Agent', () => {
             agent.vy = 50;  // 50 pixels per second down
         });
         
-        it('should update position based on velocity and deltaTime', () => {
-            const deltaTime = 0.1; // 0.1 seconds
-            const initialX = agent.x;
-            const initialY = agent.y;
+        describe('IDLE state', () => {
+            it('should not move when in IDLE state', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 500;
+                const initialX = agent.x;
+                const initialY = agent.y;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.x).toBe(initialX);
+                expect(agent.y).toBe(initialY);
+            });
             
-            agent.update(deltaTime, 800, 600);
+            it('should decrement idleTimer by ticks elapsed', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 1000;
+                
+                // deltaTime of 0.1 seconds = 100 ticks at 1000 ticks/sec
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.idleTimer).toBe(900);
+            });
             
-            expect(agent.x).toBe(initialX + agent.vx * deltaTime);
-            expect(agent.y).toBe(initialY + agent.vy * deltaTime);
+            it('should transition to MOVING when timer reaches 0', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 50;
+                agent.destinationX = agent.x;
+                agent.destinationY = agent.y;
+                
+                // deltaTime of 0.1 seconds = 100 ticks
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.state instanceof MovingState).toBe(true);
+                expect(agent.idleTimer).toBe(0);
+            });
+            
+            it('should set idleTimer to 0 if it goes negative', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 10;
+                
+                // deltaTime of 0.1 seconds = 100 ticks
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.idleTimer).toBe(0);
+            });
+            
+            it('should leave idleTimer at 0 if it is exactly 0 when timer expires', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 100;
+                agent.destinationX = agent.x;
+                agent.destinationY = agent.y;
+                
+                // deltaTime of 0.1 seconds = 100 ticks (exactly matches timer)
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.idleTimer).toBe(0);
+                expect(agent.state instanceof MovingState).toBe(true);
+            });
+            
+            it('should choose new destination when transitioning to MOVING', () => {
+                agent.state = new IdleState();
+                agent.state.enter(agent, 800, 600);
+                agent.idleTimer = 50;
+                agent.destinationX = agent.x;
+                agent.destinationY = agent.y;
+                
+                agent.update(0.1, 800, 600);
+                
+                // Destination should change from current position
+                const destChanged = agent.destinationX !== agent.x || agent.destinationY !== agent.y;
+                expect(destChanged).toBe(true);
+            });
+        });
+        
+        describe('MOVING state', () => {
+            it('should move towards destination', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 200;
+                agent.destinationY = 200;
+                
+                const initialX = agent.x;
+                const initialY = agent.y;
+                
+                agent.update(0.1, 800, 600);
+                
+                // Should have moved closer to destination
+                const newDx = agent.destinationX - agent.x;
+                const newDy = agent.destinationY - agent.y;
+                const initialDx = agent.destinationX - initialX;
+                const initialDy = agent.destinationY - initialY;
+                const newDist = Math.sqrt(newDx * newDx + newDy * newDy);
+                const initialDist = Math.sqrt(initialDx * initialDx + initialDy * initialDy);
+                
+                expect(newDist).toBeLessThan(initialDist);
+            });
+            
+            it('should not move if speed is 0', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.vx = 0;
+                agent.vy = 0;
+                agent.destinationX = 200;
+                agent.destinationY = 200;
+                
+                const initialX = agent.x;
+                const initialY = agent.y;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.x).toBe(initialX);
+                expect(agent.y).toBe(initialY);
+            });
+            
+            it('should transition to IDLE when reaching destination', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 103;
+                agent.destinationY = 103;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.state instanceof IdleState).toBe(true);
+            });
+            
+            it('should reset idleTimer to 1000 when transitioning to IDLE', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 103;
+                agent.destinationY = 103;
+                agent.idleTimer = 0;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.idleTimer).toBe(1000);
+            });
+            
+            it('should set destination to current location when reaching destination', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 103;
+                agent.destinationY = 103;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.destinationX).toBe(agent.x);
+                expect(agent.destinationY).toBe(agent.y);
+            });
+            
+            it('should consider within 5 units as reaching destination', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 104;
+                agent.destinationY = 103;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.state instanceof IdleState).toBe(true);
+            });
+            
+            it('should not transition if more than 5 units away', () => {
+                agent.state = new MovingState();
+                agent.state.enter(agent, 800, 600);
+                agent.x = 100;
+                agent.y = 100;
+                agent.destinationX = 110;
+                agent.destinationY = 110;
+                
+                agent.update(0.1, 800, 600);
+                
+                expect(agent.state instanceof MovingState).toBe(true);
+            });
         });
         
         it('should update destination coordinates', () => {
@@ -98,74 +325,28 @@ describe('Agent', () => {
             expect(typeof agent.destinationY).toBe('number');
         });
         
-        it('should bounce off left wall', () => {
-            agent.x = 3; // Near left edge
-            agent.vx = -100; // Moving left
+        it('should clamp position to canvas bounds', () => {
+            agent.state = new MovingState();
+            agent.state.enter(agent, 800, 600);
+            agent.x = 1;
+            agent.y = 1;
+            agent.destinationX = -100;
+            agent.destinationY = -100;
             
             agent.update(0.1, 800, 600);
             
-            expect(agent.vx).toBe(100); // Velocity reversed
-            expect(agent.x).toBeGreaterThanOrEqual(agent.radius); // Clamped to radius
+            expect(agent.x).toBeGreaterThanOrEqual(agent.radius);
+            expect(agent.y).toBeGreaterThanOrEqual(agent.radius);
         });
         
-        it('should bounce off right wall', () => {
-            agent.x = 797; // Near right edge
-            agent.vx = 100; // Moving right
+        it('should clamp destination to canvas bounds', () => {
+            agent.destinationX = 1000;
+            agent.destinationY = 1000;
             
             agent.update(0.1, 800, 600);
             
-            expect(agent.vx).toBe(-100); // Velocity reversed
-            expect(agent.x).toBeLessThanOrEqual(800 - agent.radius); // Clamped
-        });
-        
-        it('should bounce off top wall', () => {
-            agent.y = 3; // Near top edge
-            agent.vy = -100; // Moving up
-            
-            agent.update(0.1, 800, 600);
-            
-            expect(agent.vy).toBe(100); // Velocity reversed
-            expect(agent.y).toBeGreaterThanOrEqual(agent.radius); // Clamped to radius
-        });
-        
-        it('should bounce off bottom wall', () => {
-            agent.y = 597; // Near bottom edge
-            agent.vy = 100; // Moving down
-            
-            agent.update(0.1, 800, 600);
-            
-            expect(agent.vy).toBe(-100); // Velocity reversed
-            expect(agent.y).toBeLessThanOrEqual(600 - agent.radius); // Clamped
-        });
-        
-        it('should not change velocity when not hitting walls', () => {
-            const initialVx = agent.vx;
-            const initialVy = agent.vy;
-            
-            agent.update(0.01, 800, 600); // Small time step in middle of canvas
-            
-            expect(agent.vx).toBe(initialVx);
-            expect(agent.vy).toBe(initialVy);
-        });
-        
-        it('should handle collision with left wall when x equals radius', () => {
-            agent.x = agent.radius - 1;
-            agent.vx = -100;
-            
-            agent.update(0.1, 800, 600);
-            
-            expect(agent.vx).toBe(100);
-            expect(agent.x).toBe(agent.radius);
-        });
-        
-        it('should handle collision with right wall when x equals width minus radius', () => {
-            agent.x = 800 - agent.radius + 1;
-            agent.vx = 100;
-            
-            agent.update(0.1, 800, 600);
-            
-            expect(agent.vx).toBe(-100);
-            expect(agent.x).toBe(800 - agent.radius);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
         });
     });
     

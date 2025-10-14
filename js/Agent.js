@@ -1,3 +1,5 @@
+import { IdleState } from './AgentState.js';
+
 // Agent class representing festival attendees
 export class Agent {
     constructor(x, y, type = 'fan') {
@@ -11,9 +13,16 @@ export class Agent {
         // Color based on type
         this.color = this.getColorForType(type);
         
+        // State management
+        this.state = null;
+        this.idleTimer = 1000; // ticks until state change
+        
         // Destination coordinates for pathfinding visualization
         this.destinationX = x;
         this.destinationY = y;
+        
+        // Initialize to IDLE state
+        this.transitionTo(new IdleState());
     }
     
     getColorForType(type) {
@@ -29,25 +38,33 @@ export class Agent {
         }
     }
     
+    chooseRandomDestination(canvasWidth, canvasHeight) {
+        this.destinationX = Math.random() * canvasWidth;
+        this.destinationY = Math.random() * canvasHeight;
+    }
+    
+    /**
+     * Transition to a new state
+     * @param {AgentState} newState - The new state to transition to
+     * @param {number} canvasWidth - Canvas width for state initialization
+     * @param {number} canvasHeight - Canvas height for state initialization
+     */
+    transitionTo(newState, canvasWidth = 0, canvasHeight = 0) {
+        if (this.state) {
+            this.state.exit(this);
+        }
+        this.state = newState;
+        this.state.enter(this, canvasWidth, canvasHeight);
+    }
+    
     // Frame-independent update
     update(deltaTime, canvasWidth, canvasHeight) {
-        // Update position based on velocity and deltaTime
-        this.x += this.vx * deltaTime;
-        this.y += this.vy * deltaTime;
+        // Delegate to current state
+        this.state.update(this, deltaTime, canvasWidth, canvasHeight);
         
-        // Bounce off walls
-        if (this.x - this.radius < 0 || this.x + this.radius > canvasWidth) {
-            this.vx = -this.vx;
-            this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
-        }
-        if (this.y - this.radius < 0 || this.y + this.radius > canvasHeight) {
-            this.vy = -this.vy;
-            this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
-        }
-        
-        // Update destination (for now, just set it ahead in the direction of movement)
-        this.destinationX = this.x + this.vx * 0.5;
-        this.destinationY = this.y + this.vy * 0.5;
+        // Clamp position to canvas bounds
+        this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
+        this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
         
         // Clamp destination to canvas bounds
         this.destinationX = Math.max(0, Math.min(canvasWidth, this.destinationX));
