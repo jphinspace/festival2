@@ -17,21 +17,27 @@ export class Simulation {
     }
     
     init() {
-        // Create 4 vertical food stall obstacles, evenly spaced
+        // Create 4 food stall obstacles in a vertical line, evenly spaced
+        const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         const agentDiameter = 10; // agent radius = 5, diameter = 10
-        const stallWidth = 40; // 4 agent diameters
-        const stallHeight = 80; // 8 agent diameters (vertical orientation)
+        const stallWidth = 80; // 8 agent diameters (wider for vertical line)
+        const stallHeight = 40; // 4 agent diameters (shorter for vertical line)
         const spacing = 2.5 * agentDiameter; // 25 pixels between stalls
         
-        // Calculate total width and starting position to center all stalls
-        const totalWidth = 4 * stallWidth + 3 * spacing; // 4 stalls + 3 gaps
-        const startX = (this.canvas.width - totalWidth) / 2 + stallWidth / 2;
+        // Position 3rd stall at center, with 2 above and 1 below
+        // Stall positions: 0, 1, 2 (at center), 3
+        // Calculate Y positions relative to center
+        const stall2Y = centerY; // 3rd stall (index 2) at center
+        const stall1Y = stall2Y - (stallHeight + spacing);
+        const stall0Y = stall1Y - (stallHeight + spacing);
+        const stall3Y = stall2Y + (stallHeight + spacing);
         
-        // Create 4 food stall obstacles
+        const yPositions = [stall0Y, stall1Y, stall2Y, stall3Y];
+        
+        // Create 4 food stall obstacles in vertical line
         for (let i = 0; i < 4; i++) {
-            const x = startX + i * (stallWidth + spacing);
-            this.obstacles.push(new Obstacle(x, centerY, stallWidth, stallHeight));
+            this.obstacles.push(new Obstacle(centerX, yPositions[i], stallWidth, stallHeight));
         }
     }
     

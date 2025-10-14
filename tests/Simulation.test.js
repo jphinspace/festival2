@@ -89,20 +89,20 @@ describe('Simulation', () => {
             expect(simulation.agents.length).toBe(0);
         });
 
-        it('should create four vertical food stall obstacles', () => {
+        it('should create four food stall obstacles in a vertical line', () => {
             const simulation = new Simulation(canvas);
             
             expect(simulation.obstacles.length).toBe(4);
             
-            // All obstacles should be vertically oriented (height > width)
+            // All obstacles should be in a vertical line (same x, different y)
             simulation.obstacles.forEach(obstacle => {
-                expect(obstacle.width).toBe(40);
-                expect(obstacle.height).toBe(80);
-                expect(obstacle.y).toBe(300); // All at vertical center
+                expect(obstacle.width).toBe(80);
+                expect(obstacle.height).toBe(40);
+                expect(obstacle.x).toBe(400); // All at horizontal center
             });
         });
 
-        it('should space food stalls 2.5x agent diameter apart', () => {
+        it('should space food stalls 2.5x agent diameter apart vertically', () => {
             const simulation = new Simulation(canvas);
             const agentDiameter = 10;
             const expectedSpacing = 2.5 * agentDiameter; // 25 pixels
@@ -112,29 +112,26 @@ describe('Simulation', () => {
                 const stall1 = simulation.obstacles[i];
                 const stall2 = simulation.obstacles[i + 1];
                 
-                // Distance between centers minus their widths should equal spacing
-                const centerDistance = stall2.x - stall1.x;
-                const edgeToEdgeDistance = centerDistance - stall1.width;
+                // Distance between centers minus their heights should equal spacing
+                const centerDistance = stall2.y - stall1.y;
+                const edgeToEdgeDistance = centerDistance - stall1.height;
                 
                 expect(edgeToEdgeDistance).toBeCloseTo(expectedSpacing, 0);
             }
         });
 
-        it('should center food stalls horizontally on canvas', () => {
+        it('should position 3rd stall at vertical center with 2 above and 1 below', () => {
             const simulation = new Simulation(canvas);
             
-            // Calculate expected total width
-            const stallWidth = 40;
-            const spacing = 25;
-            const totalWidth = 4 * stallWidth + 3 * spacing;
+            // 3rd stall (index 2) should be at vertical center
+            expect(simulation.obstacles[2].y).toBe(300);
             
-            // First stall should start at centered position
-            const expectedStartX = (canvas.width - totalWidth) / 2 + stallWidth / 2;
-            expect(simulation.obstacles[0].x).toBeCloseTo(expectedStartX, 0);
+            // Verify 2 stalls above center
+            expect(simulation.obstacles[0].y).toBeLessThan(300);
+            expect(simulation.obstacles[1].y).toBeLessThan(300);
             
-            // Last stall should end at centered position
-            const expectedEndX = expectedStartX + 3 * (stallWidth + spacing);
-            expect(simulation.obstacles[3].x).toBeCloseTo(expectedEndX, 0);
+            // Verify 1 stall below center
+            expect(simulation.obstacles[3].y).toBeGreaterThan(300);
         });
     });
     
