@@ -2,8 +2,7 @@ export default {
   testEnvironment: 'jsdom',
   collectCoverageFrom: [
     'js/**/*.js',
-    '!js/main.js',
-    '!js/Pathfinding.js'
+    '!js/main.js'
   ],
   coverageThreshold: {
     global: {
