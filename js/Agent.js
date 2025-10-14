@@ -1,3 +1,5 @@
+import { AgentState } from './AgentState.js';
+
 // Agent class representing festival attendees
 export class Agent {
     constructor(x, y, type = 'fan') {
@@ -10,6 +12,10 @@ export class Agent {
         
         // Color based on type
         this.color = this.getColorForType(type);
+        
+        // State management
+        this.state = AgentState.IDLE;
+        this.idleTimer = 1000; // ticks until state change
         
         // Destination coordinates for pathfinding visualization
         this.destinationX = x;
@@ -29,25 +35,61 @@ export class Agent {
         }
     }
     
+    chooseRandomDestination(canvasWidth, canvasHeight) {
+        this.destinationX = Math.random() * canvasWidth;
+        this.destinationY = Math.random() * canvasHeight;
+    }
+    
     // Frame-independent update
     update(deltaTime, canvasWidth, canvasHeight) {
-        // Update position based on velocity and deltaTime
-        this.x += this.vx * deltaTime;
-        this.y += this.vy * deltaTime;
+        // Calculate distance to destination
+        const dx = this.destinationX - this.x;
+        const dy = this.destinationY - this.y;
+        const distanceToDestination = Math.sqrt(dx * dx + dy * dy);
         
-        // Bounce off walls
-        if (this.x - this.radius < 0 || this.x + this.radius > canvasWidth) {
-            this.vx = -this.vx;
-            this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
-        }
-        if (this.y - this.radius < 0 || this.y + this.radius > canvasHeight) {
-            this.vy = -this.vy;
-            this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
+        // State machine logic
+        if (this.state === AgentState.MOVING) {
+            // Check if reached destination (within 5 units)
+            if (distanceToDestination <= 5) {
+                // Transition to IDLE
+                this.state = AgentState.IDLE;
+                this.idleTimer = 1000;
+                // Set destination to current location
+                this.destinationX = this.x;
+                this.destinationY = this.y;
+            } else {
+                // Continue moving towards destination
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > 0 && distanceToDestination > 0) {
+                    // Normalize direction and apply velocity
+                    const dirX = dx / distanceToDestination;
+                    const dirY = dy / distanceToDestination;
+                    this.x += dirX * speed * deltaTime;
+                    this.y += dirY * speed * deltaTime;
+                }
+            }
+        } else {
+            // IDLE state (or any other state defaults to IDLE behavior)
+            // Decrement timer (deltaTime is in seconds, but timer is in ticks at 1000 ticks/sec)
+            // Convert deltaTime to ticks
+            const ticksElapsed = deltaTime * 1000;
+            this.idleTimer -= ticksElapsed;
+            
+            // Check if timer expired
+            if (this.idleTimer <= 0) {
+                // Ensure timer is exactly 0 if it went negative
+                if (this.idleTimer < 0) {
+                    this.idleTimer = 0;
+                }
+                // Transition to MOVING
+                this.state = AgentState.MOVING;
+                this.chooseRandomDestination(canvasWidth, canvasHeight);
+            }
         }
         
-        // Update destination (for now, just set it ahead in the direction of movement)
-        this.destinationX = this.x + this.vx * 0.5;
-        this.destinationY = this.y + this.vy * 0.5;
+        // Clamp position to canvas bounds
+        this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
+        this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
         
         // Clamp destination to canvas bounds
         this.destinationX = Math.max(0, Math.min(canvasWidth, this.destinationX));
