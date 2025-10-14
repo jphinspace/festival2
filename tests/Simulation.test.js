@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Simulation } from '../js/Simulation.js';
 import { Agent } from '../js/Agent.js';
+import { Obstacle } from '../js/Obstacle.js';
 
 describe('Simulation', () => {
     let canvas;
@@ -144,6 +145,26 @@ describe('Simulation', () => {
             
             // Most spawns should be clear of obstacles
             expect(clearsFound).toBeGreaterThan(40);
+        });
+
+        it('should fallback to random location when entire area is covered', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Add large obstacles covering most of the canvas
+            simulation.obstacles = [
+                new Obstacle(200, 200, 400, 400),
+                new Obstacle(600, 200, 400, 400),
+                new Obstacle(200, 500, 400, 400),
+                new Obstacle(600, 500, 400, 400)
+            ];
+            
+            const location = simulation.getSpawnLocation();
+            
+            // Should still return a location
+            expect(location.x).toBeGreaterThanOrEqual(0);
+            expect(location.x).toBeLessThanOrEqual(canvas.width);
+            expect(location.y).toBeGreaterThanOrEqual(0);
+            expect(location.y).toBeLessThanOrEqual(canvas.height);
         });
     });
     

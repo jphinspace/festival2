@@ -278,5 +278,26 @@ describe('Pathfinding', () => {
             expect(result.x).toBeDefined();
             expect(result.y).toBeDefined();
         });
+
+        it('should successfully find path with small centered obstacle', () => {
+            obstacles = [new Obstacle(30, 30, 15, 15)];
+            agentPathState = {};
+            
+            // Start far from obstacle, goal requires going around it
+            const result = calculateNextWaypoint(10, 30, 50, 30, obstacles, 3, agentPathState);
+            
+            expect(result).toBeDefined();
+            expect(agentPathState.path).toBeDefined();
+        });
+
+        it('should advance through waypoints in path', () => {
+            obstacles = [new Obstacle(30, 30, 15, 15)];
+            agentPathState = { mode: 'astar', path: [{ x: 15, y: 15 }, { x: 25, y: 10 }, { x: 40, y: 40 }], pathIndex: 0 };
+            
+            // Close to first waypoint, should advance
+            const result = calculateNextWaypoint(13, 13, 50, 50, obstacles, 3, agentPathState);
+            
+            expect(agentPathState.pathIndex).toBeGreaterThan(0);
+        });
     });
 });
