@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Agent } from '../js/Agent.js';
 import { IdleState, MovingState } from '../js/AgentState.js';
 import { Obstacle } from '../js/Obstacle.js';
+import { SpecialMovementZone } from '../js/SpecialMovementZone.js';
 
 describe('Agent', () => {
     describe('constructor', () => {
@@ -146,6 +147,90 @@ describe('Agent', () => {
             agent.chooseRandomDestination(800, 600, obstacles);
             
             // Should still set a destination even if it collides
+            expect(agent.destinationX).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
+        });
+
+        it('should avoid special movement zones when choosing destination', () => {
+            const zone = new SpecialMovementZone(400, 300, 100, 100, 'entranceway');
+            agent.specialMovementZones = [zone];
+            
+            agent.chooseRandomDestination(800, 600, []);
+            
+            // Check that destination doesn't collide with zone
+            let collidesWithZone = false;
+            for (const z of agent.specialMovementZones) {
+                if (z.containsPoint(agent.destinationX, agent.destinationY, agent.radius)) {
+                    collidesWithZone = true;
+                    break;
+                }
+            }
+            
+            // Most of the time, should avoid zone
+            expect(collidesWithZone).toBe(false);
+        });
+
+        it('should avoid both obstacles and special movement zones', () => {
+            const obstacles = [new Obstacle(200, 200, 100, 100)];
+            const zone = new SpecialMovementZone(600, 400, 100, 100, 'entranceway');
+            agent.specialMovementZones = [zone];
+            
+            agent.chooseRandomDestination(800, 600, obstacles);
+            
+            // Check that destination doesn't collide with obstacle or zone
+            let collides = false;
+            for (const obstacle of obstacles) {
+                if (obstacle.containsPoint(agent.destinationX, agent.destinationY, agent.radius)) {
+                    collides = true;
+                    break;
+                }
+            }
+            for (const z of agent.specialMovementZones) {
+                if (z.containsPoint(agent.destinationX, agent.destinationY, agent.radius)) {
+                    collides = true;
+                    break;
+                }
+            }
+            
+            expect(collides).toBe(false);
+        });
+
+        it('should handle empty special movement zones array', () => {
+            agent.specialMovementZones = [];
+            const obstacles = [new Obstacle(400, 300, 100, 100)];
+            
+            agent.chooseRandomDestination(800, 600, obstacles);
+            
+            // Should still set a destination
+            expect(agent.destinationX).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
+        });
+
+        it('should handle undefined special movement zones', () => {
+            agent.specialMovementZones = undefined;
+            const obstacles = [new Obstacle(400, 300, 100, 100)];
+            
+            agent.chooseRandomDestination(800, 600, obstacles);
+            
+            // Should still set a destination
+            expect(agent.destinationX).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
+        });
+
+        it('should fallback to random location when zones and obstacles cover entire area', () => {
+            // Cover entire canvas with a zone
+            const zone = new SpecialMovementZone(400, 300, 800, 600, 'entranceway');
+            agent.specialMovementZones = [zone];
+            
+            agent.chooseRandomDestination(800, 600, []);
+            
+            // Should still set a destination even if it collides with zone
             expect(agent.destinationX).toBeGreaterThanOrEqual(0);
             expect(agent.destinationX).toBeLessThanOrEqual(800);
             expect(agent.destinationY).toBeGreaterThanOrEqual(0);

@@ -1,5 +1,7 @@
 import { Agent } from './Agent.js';
 import { Obstacle } from './Obstacle.js';
+import { Wall } from './Wall.js';
+import { SpecialMovementZone } from './SpecialMovementZone.js';
 
 // Simulation class
 export class Simulation {
@@ -8,6 +10,7 @@ export class Simulation {
         this.ctx = canvas.getContext('2d');
         this.agents = [];
         this.obstacles = [];
+        this.specialMovementZones = [];
         this.tickRate = 1.0; // 1x = 1000 ticks per second
         this.lastTime = performance.now();
         this.running = true;
@@ -38,6 +41,34 @@ export class Simulation {
         for (let i = 0; i < 4; i++) {
             this.obstacles.push(new Obstacle(centerX, yPositions[i], obstacleSize, obstacleSize));
         }
+        
+        // Create entranceway zone with walls
+        // Wall dimensions: height = ~1/5 of canvas height, width = ~45% of canvas width
+        const wallHeight = this.canvas.height / 5;
+        const wallWidth = this.canvas.width * 0.45;
+        const gapWidth = this.canvas.width * 0.1;
+        
+        // Position walls at bottom of canvas
+        const wallY = this.canvas.height - wallHeight / 2;
+        
+        // Left wall
+        const leftWallX = wallWidth / 2;
+        this.obstacles.push(new Wall(leftWallX, wallY, wallWidth, wallHeight));
+        
+        // Right wall
+        const rightWallX = this.canvas.width - wallWidth / 2;
+        this.obstacles.push(new Wall(rightWallX, wallY, wallWidth, wallHeight));
+        
+        // Entranceway special movement zone (in the gap between walls)
+        const entrancewayX = this.canvas.width / 2;
+        const entrancewayWidth = gapWidth;
+        this.specialMovementZones.push(new SpecialMovementZone(
+            entrancewayX,
+            wallY,
+            entrancewayWidth,
+            wallHeight,
+            'entranceway'
+        ));
     }
     
     setTickRate(rate) {
@@ -53,6 +84,40 @@ export class Simulation {
         const agentRadius = 5;
         const maxAttempts = 100;
         
+        // Get the entranceway zone (should be the first/only zone)
+        const entranceway = this.specialMovementZones.find(zone => zone.type === 'entranceway');
+        
+        if (entranceway) {
+            // Spawn inside the entranceway zone
+            const bounds = entranceway.getBounds();
+            
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                // Generate random point within entranceway bounds
+                const x = bounds.left + Math.random() * (bounds.right - bounds.left);
+                const y = bounds.top + Math.random() * (bounds.bottom - bounds.top);
+                
+                // Check if this location collides with any obstacle
+                let collides = false;
+                for (const obstacle of this.obstacles) {
+                    if (obstacle.collidesWith(x, y, agentRadius)) {
+                        collides = true;
+                        break;
+                    }
+                }
+                
+                if (!collides) {
+                    return { x, y };
+                }
+            }
+            
+            // If we couldn't find a spot after maxAttempts, return a random location in entranceway anyway
+            return {
+                x: bounds.left + Math.random() * (bounds.right - bounds.left),
+                y: bounds.top + Math.random() * (bounds.bottom - bounds.top)
+            };
+        }
+        
+        // Fallback: if no entranceway zone exists, use old behavior
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const x = Math.random() * this.canvas.width;
             const y = Math.random() * this.canvas.height;
@@ -83,6 +148,7 @@ export class Simulation {
         const location = this.getSpawnLocation();
         const agent = new Agent(location.x, location.y, 'fan');
         agent.obstacles = this.obstacles;
+        agent.specialMovementZones = this.specialMovementZones;
         this.agents.push(agent);
     }
     
@@ -97,6 +163,8 @@ export class Simulation {
         
         // Update all agents
         for (const agent of this.agents) {
+            agent.obstacles = this.obstacles;
+            agent.specialMovementZones = this.specialMovementZones;
             agent.update(deltaTime, this.canvas.width, this.canvas.height, this.obstacles);
         }
     }
@@ -108,6 +176,11 @@ export class Simulation {
         // Draw obstacles first (so agents appear on top)
         for (const obstacle of this.obstacles) {
             obstacle.draw(this.ctx);
+        }
+        
+        // Draw special movement zones
+        for (const zone of this.specialMovementZones) {
+            zone.draw(this.ctx);
         }
         
         // Draw all agents
