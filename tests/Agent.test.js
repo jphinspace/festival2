@@ -470,5 +470,68 @@ describe('Agent', () => {
             
             expect(calls).toEqual(['beginPath', 'arc', 'fill']);
         });
+        
+        it('should draw pathfinding path when showPath is true and path exists', () => {
+            // Set up a pathfinding path
+            agent.pathState = {
+                mode: 'astar',
+                path: [
+                    { x: 150, y: 150 },
+                    { x: 200, y: 200 },
+                    { x: 250, y: 250 }
+                ],
+                pathIndex: 0
+            };
+            
+            agent.draw(mockCtx, false, true);
+            
+            expect(mockCtx.strokeStyle).toBe('#87CEEB'); // Light blue
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(150, 150);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(200, 200);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(250, 250);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should not draw path when showPath is false', () => {
+            agent.pathState = {
+                mode: 'astar',
+                path: [
+                    { x: 150, y: 150 },
+                    { x: 200, y: 200 }
+                ],
+                pathIndex: 0
+            };
+            
+            agent.draw(mockCtx, false, false);
+            
+            // Should not draw any lines (only the agent arc)
+            expect(mockCtx.stroke).not.toHaveBeenCalled();
+        });
+        
+        it('should not draw path when pathState.path is empty', () => {
+            agent.pathState = {
+                mode: 'bug',
+                path: [],
+                pathIndex: 0
+            };
+            
+            agent.draw(mockCtx, false, true);
+            
+            expect(mockCtx.stroke).not.toHaveBeenCalled();
+        });
+        
+        it('should draw both destination line and path when both flags are true', () => {
+            agent.pathState = {
+                mode: 'astar',
+                path: [{ x: 150, y: 150 }],
+                pathIndex: 0
+            };
+            
+            agent.draw(mockCtx, true, true);
+            
+            // Both stroke calls should be made (one for path, one for destination)
+            expect(mockCtx.stroke).toHaveBeenCalledTimes(2);
+        });
     });
 });

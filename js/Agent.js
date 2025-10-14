@@ -102,7 +102,22 @@ export class Agent {
         this.destinationY = Math.max(0, Math.min(canvasHeight, this.destinationY));
     }
     
-    draw(ctx, showDestination = false) {
+    draw(ctx, showDestination = false, showPath = false) {
+        // Draw pathfinding path if enabled
+        if (showPath && this.pathState.path && this.pathState.path.length > 0) {
+            ctx.strokeStyle = '#87CEEB'; // Light blue
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            
+            // Draw line through all waypoints in the path
+            for (const waypoint of this.pathState.path) {
+                ctx.lineTo(waypoint.x, waypoint.y);
+            }
+            
+            ctx.stroke();
+        }
+        
         // Draw destination line if enabled
         if (showDestination) {
             ctx.strokeStyle = '#00FF00'; // Bright green

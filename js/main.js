@@ -23,6 +23,14 @@ toggleButton.addEventListener('click', () => {
     toggleButton.textContent = isShowing ? 'Hide Destinations' : 'Show Destinations';
 });
 
+// Setup path toggle button
+const togglePathsButton = document.getElementById('togglePaths');
+
+togglePathsButton.addEventListener('click', () => {
+    const isShowing = simulation.togglePaths();
+    togglePathsButton.textContent = isShowing ? 'Hide Paths' : 'Show Paths';
+});
+
 // Setup spawn agent button
 const spawnButton = document.getElementById('spawnAgent');
 

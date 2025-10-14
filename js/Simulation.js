@@ -12,6 +12,7 @@ export class Simulation {
         this.lastTime = performance.now();
         this.running = true;
         this.showDestinations = false; // Toggle for destination lines
+        this.showPaths = false; // Toggle for pathfinding path lines
         
         this.init();
     }
@@ -31,6 +32,11 @@ export class Simulation {
     toggleDestinations() {
         this.showDestinations = !this.showDestinations;
         return this.showDestinations;
+    }
+    
+    togglePaths() {
+        this.showPaths = !this.showPaths;
+        return this.showPaths;
     }
     
     getSpawnLocation() {
@@ -96,7 +102,7 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            agent.draw(this.ctx, this.showDestinations);
+            agent.draw(this.ctx, this.showDestinations, this.showPaths);
         }
     }
     

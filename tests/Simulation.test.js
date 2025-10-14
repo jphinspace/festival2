@@ -256,6 +256,22 @@ describe('Simulation', () => {
         });
     });
     
+    describe('togglePaths', () => {
+        it('should toggle showPaths and return new state', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.showPaths).toBe(false);
+            
+            const result1 = simulation.togglePaths();
+            expect(result1).toBe(true);
+            expect(simulation.showPaths).toBe(true);
+            
+            const result2 = simulation.togglePaths();
+            expect(result2).toBe(false);
+            expect(simulation.showPaths).toBe(false);
+        });
+    });
+    
     describe('update', () => {
         it('should calculate deltaTime based on currentTime and lastTime', () => {
             const simulation = new Simulation(canvas);
@@ -371,7 +387,7 @@ describe('Simulation', () => {
             simulation.draw();
             
             simulation.agents.forEach(agent => {
-                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false);
+                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false, false);
             });
         });
         
@@ -386,7 +402,36 @@ describe('Simulation', () => {
             
             simulation.draw();
             
-            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true);
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false);
+        });
+        
+        it('should pass showPaths flag to agent draw', () => {
+            const simulation = new Simulation(canvas);
+            simulation.showPaths = true;
+            
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
+            
+            simulation.agents[0].draw = jest.fn();
+            
+            simulation.draw();
+            
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true);
+        });
+        
+        it('should pass both flags when both are enabled', () => {
+            const simulation = new Simulation(canvas);
+            simulation.showDestinations = true;
+            simulation.showPaths = true;
+            
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
+            
+            simulation.agents[0].draw = jest.fn();
+            
+            simulation.draw();
+            
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, true);
         });
         
         it('should clear canvas before drawing agents', () => {
