@@ -15,5 +15,13 @@ slider.addEventListener('input', (e) => {
     tickRateValue.textContent = `${rate.toFixed(1)}x (${ticksPerSecond} ticks/s)`;
 });
 
+// Setup destination toggle button
+const toggleButton = document.getElementById('toggleDestinations');
+
+toggleButton.addEventListener('click', () => {
+    const isShowing = simulation.toggleDestinations();
+    toggleButton.textContent = isShowing ? 'Hide Destinations' : 'Show Destinations';
+});
+
 // Start simulation
 simulation.run();

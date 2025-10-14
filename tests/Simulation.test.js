@@ -29,9 +29,14 @@ describe('Simulation', () => {
         mockCtx = {
             clearRect: jest.fn(),
             fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 0,
             beginPath: jest.fn(),
             arc: jest.fn(),
             fill: jest.fn(),
+            moveTo: jest.fn(),
+            lineTo: jest.fn(),
+            stroke: jest.fn(),
             getContext: jest.fn(() => mockCtx)
         };
         
@@ -57,6 +62,7 @@ describe('Simulation', () => {
             expect(simulation.tickRate).toBe(1.0);
             expect(simulation.lastTime).toBeGreaterThan(0);
             expect(simulation.running).toBe(true);
+            expect(simulation.showDestinations).toBe(false);
         });
         
         it('should initialize agents array', () => {
@@ -118,6 +124,22 @@ describe('Simulation', () => {
             
             simulation.setTickRate(5.0);
             expect(simulation.tickRate).toBe(5.0);
+        });
+    });
+    
+    describe('toggleDestinations', () => {
+        it('should toggle showDestinations and return new state', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.showDestinations).toBe(false);
+            
+            const result1 = simulation.toggleDestinations();
+            expect(result1).toBe(true);
+            expect(simulation.showDestinations).toBe(true);
+            
+            const result2 = simulation.toggleDestinations();
+            expect(result2).toBe(false);
+            expect(simulation.showDestinations).toBe(false);
         });
     });
     
@@ -214,8 +236,19 @@ describe('Simulation', () => {
             simulation.draw();
             
             simulation.agents.forEach(agent => {
-                expect(agent.draw).toHaveBeenCalledWith(mockCtx);
+                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false);
             });
+        });
+        
+        it('should pass showDestinations flag to agent draw', () => {
+            const simulation = new Simulation(canvas);
+            simulation.showDestinations = true;
+            
+            simulation.agents[0].draw = jest.fn();
+            
+            simulation.draw();
+            
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true);
         });
         
         it('should clear canvas before drawing agents', () => {

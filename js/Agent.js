@@ -10,12 +10,16 @@ export class Agent {
         
         // Color based on type
         this.color = this.getColorForType(type);
+        
+        // Destination coordinates for pathfinding visualization
+        this.destinationX = x;
+        this.destinationY = y;
     }
     
     getColorForType(type) {
         switch(type) {
             case 'fan':
-                return `hsl(${Math.random() * 360}, 70%, 50%)`;
+                return '#FFB380'; // Pale orange
             case 'security':
                 return 'yellow';
             case 'performer':
@@ -40,9 +44,28 @@ export class Agent {
             this.vy = -this.vy;
             this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
         }
+        
+        // Update destination (for now, just set it ahead in the direction of movement)
+        this.destinationX = this.x + this.vx * 0.5;
+        this.destinationY = this.y + this.vy * 0.5;
+        
+        // Clamp destination to canvas bounds
+        this.destinationX = Math.max(0, Math.min(canvasWidth, this.destinationX));
+        this.destinationY = Math.max(0, Math.min(canvasHeight, this.destinationY));
     }
     
-    draw(ctx) {
+    draw(ctx, showDestination = false) {
+        // Draw destination line if enabled
+        if (showDestination) {
+            ctx.strokeStyle = '#00FF00'; // Bright green
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.destinationX, this.destinationY);
+            ctx.stroke();
+        }
+        
+        // Draw agent
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);

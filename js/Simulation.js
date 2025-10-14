@@ -9,6 +9,7 @@ export class Simulation {
         this.tickRate = 1.0; // 1x = 1000 ticks per second
         this.lastTime = performance.now();
         this.running = true;
+        this.showDestinations = false; // Toggle for destination lines
         
         this.init();
     }
@@ -25,6 +26,11 @@ export class Simulation {
     
     setTickRate(rate) {
         this.tickRate = rate;
+    }
+    
+    toggleDestinations() {
+        this.showDestinations = !this.showDestinations;
+        return this.showDestinations;
     }
     
     update(currentTime) {
@@ -48,7 +54,7 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            agent.draw(this.ctx);
+            agent.draw(this.ctx, this.showDestinations);
         }
     }
     

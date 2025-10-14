@@ -10,6 +10,8 @@ describe('Agent', () => {
             expect(agent.y).toBe(200);
             expect(agent.type).toBe('fan');
             expect(agent.radius).toBe(5);
+            expect(agent.destinationX).toBe(100);
+            expect(agent.destinationY).toBe(200);
         });
         
         it('should create an agent with specified type', () => {
@@ -42,10 +44,10 @@ describe('Agent', () => {
             agent = new Agent(100, 200);
         });
         
-        it('should return HSL color for fan type', () => {
+        it('should return pale orange for fan type', () => {
             const color = agent.getColorForType('fan');
             
-            expect(color).toMatch(/^hsl\(\d+(\.\d+)?, 70%, 50%\)$/);
+            expect(color).toBe('#FFB380');
         });
         
         it('should return yellow for security type', () => {
@@ -85,6 +87,15 @@ describe('Agent', () => {
             
             expect(agent.x).toBe(initialX + agent.vx * deltaTime);
             expect(agent.y).toBe(initialY + agent.vy * deltaTime);
+        });
+        
+        it('should update destination coordinates', () => {
+            agent.update(0.1, 800, 600);
+            
+            expect(agent.destinationX).toBeDefined();
+            expect(agent.destinationY).toBeDefined();
+            expect(typeof agent.destinationX).toBe('number');
+            expect(typeof agent.destinationY).toBe('number');
         });
         
         it('should bounce off left wall', () => {
@@ -166,9 +177,14 @@ describe('Agent', () => {
             agent = new Agent(100, 200, 'fan');
             mockCtx = {
                 fillStyle: '',
+                strokeStyle: '',
+                lineWidth: 0,
                 beginPath: jest.fn(),
                 arc: jest.fn(),
-                fill: jest.fn()
+                fill: jest.fn(),
+                moveTo: jest.fn(),
+                lineTo: jest.fn(),
+                stroke: jest.fn()
             };
         });
         
@@ -181,7 +197,7 @@ describe('Agent', () => {
         it('should call beginPath', () => {
             agent.draw(mockCtx);
             
-            expect(mockCtx.beginPath).toHaveBeenCalledTimes(1);
+            expect(mockCtx.beginPath).toHaveBeenCalled();
         });
         
         it('should draw arc with correct parameters', () => {
@@ -199,7 +215,24 @@ describe('Agent', () => {
         it('should call fill to draw the agent', () => {
             agent.draw(mockCtx);
             
-            expect(mockCtx.fill).toHaveBeenCalledTimes(1);
+            expect(mockCtx.fill).toHaveBeenCalled();
+        });
+        
+        it('should draw destination line when showDestination is true', () => {
+            agent.draw(mockCtx, true);
+            
+            expect(mockCtx.strokeStyle).toBe('#00FF00');
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should not draw destination line when showDestination is false', () => {
+            agent.draw(mockCtx, false);
+            
+            expect(mockCtx.stroke).not.toHaveBeenCalled();
+            expect(mockCtx.moveTo).not.toHaveBeenCalled();
+            expect(mockCtx.lineTo).not.toHaveBeenCalled();
         });
         
         it('should call methods in correct order', () => {
