@@ -198,7 +198,7 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
  * @param {number} agentRadius - Agent radius for collision checking
  * @returns {Array<{x: number, y: number}>} Path waypoints (empty if no path found)
  */
-function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
+export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
     const MAX_EXPANSIONS = 300;
     const GRID_SIZE = 10; // Grid cell size for discretization
     
