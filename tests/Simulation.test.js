@@ -89,14 +89,50 @@ describe('Simulation', () => {
             expect(simulation.agents.length).toBe(0);
         });
 
-        it('should create one obstacle in the center', () => {
+        it('should create four food stall obstacles in a vertical line', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.obstacles.length).toBe(1);
-            expect(simulation.obstacles[0].x).toBe(400);
-            expect(simulation.obstacles[0].y).toBe(300);
-            expect(simulation.obstacles[0].width).toBe(40);
-            expect(simulation.obstacles[0].height).toBe(40);
+            expect(simulation.obstacles.length).toBe(4);
+            
+            // All obstacles should be in a vertical line (same x, different y)
+            // with original square dimensions (40x40)
+            simulation.obstacles.forEach(obstacle => {
+                expect(obstacle.width).toBe(40);
+                expect(obstacle.height).toBe(40);
+                expect(obstacle.x).toBe(400); // All at horizontal center
+            });
+        });
+
+        it('should space food stalls 2.5x agent diameter apart vertically', () => {
+            const simulation = new Simulation(canvas);
+            const agentDiameter = 10;
+            const expectedSpacing = 2.5 * agentDiameter; // 25 pixels
+            
+            // Check spacing between consecutive stalls
+            for (let i = 0; i < simulation.obstacles.length - 1; i++) {
+                const stall1 = simulation.obstacles[i];
+                const stall2 = simulation.obstacles[i + 1];
+                
+                // Distance between centers minus their heights should equal spacing
+                const centerDistance = stall2.y - stall1.y;
+                const edgeToEdgeDistance = centerDistance - stall1.height;
+                
+                expect(edgeToEdgeDistance).toBeCloseTo(expectedSpacing, 0);
+            }
+        });
+
+        it('should position 3rd stall at vertical center with 2 above and 1 below', () => {
+            const simulation = new Simulation(canvas);
+            
+            // 3rd stall (index 2) should be at vertical center
+            expect(simulation.obstacles[2].y).toBe(300);
+            
+            // Verify 2 stalls above center
+            expect(simulation.obstacles[0].y).toBeLessThan(300);
+            expect(simulation.obstacles[1].y).toBeLessThan(300);
+            
+            // Verify 1 stall below center
+            expect(simulation.obstacles[3].y).toBeGreaterThan(300);
         });
     });
     
