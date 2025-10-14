@@ -140,56 +140,50 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         if (hasLineOfSight(currentX, currentY, goalX, goalY, obstacles, agentRadius)) {
             // Clear path - go straight to goal
             return { x: goalX, y: goalY, mode: 'bug' };
-        } else {
-            // Blocked - switch to A* mode to find detour
-            agentPathState.mode = 'astar';
-            agentPathState.path = findBoundedPath(currentX, currentY, goalX, goalY, obstacles, agentRadius);
-            agentPathState.pathIndex = 0;
         }
+        // Blocked - switch to A* mode to find detour
+        agentPathState.mode = 'astar';
+        agentPathState.path = findBoundedPath(currentX, currentY, goalX, goalY, obstacles, agentRadius);
+        agentPathState.pathIndex = 0;
+        // Fall through to astar mode handling
     }
     
-    // A* mode: follow computed path
-    if (agentPathState.mode === 'astar') {
-        // If we've reached the end of the path, switch back to bug mode
-        if (agentPathState.path.length === 0 || agentPathState.pathIndex >= agentPathState.path.length) {
+    // A* mode: follow computed path (also handles fall-through from bug mode)
+    // If we've reached the end of the path, switch back to bug mode
+    if (agentPathState.path.length === 0 || agentPathState.pathIndex >= agentPathState.path.length) {
+        agentPathState.mode = 'bug';
+        agentPathState.path = [];
+        agentPathState.pathIndex = 0;
+        return { x: goalX, y: goalY, mode: 'bug' };
+    }
+    
+    // Check if we have line of sight to goal - if so, switch back to bug mode
+    if (hasLineOfSight(currentX, currentY, goalX, goalY, obstacles, agentRadius)) {
+        agentPathState.mode = 'bug';
+        agentPathState.path = [];
+        agentPathState.pathIndex = 0;
+        return { x: goalX, y: goalY, mode: 'bug' };
+    }
+    
+    // Follow the path
+    const nextWaypoint = agentPathState.path[agentPathState.pathIndex];
+    
+    // If we're close to the current waypoint, advance to next
+    const distToWaypoint = calculateDistance(currentX, currentY, nextWaypoint.x, nextWaypoint.y);
+    
+    if (distToWaypoint < 5) {
+        agentPathState.pathIndex++;
+        if (agentPathState.pathIndex >= agentPathState.path.length) {
+            // Reached end of path
             agentPathState.mode = 'bug';
             agentPathState.path = [];
             agentPathState.pathIndex = 0;
             return { x: goalX, y: goalY, mode: 'bug' };
         }
-        
-        // Check if we have line of sight to goal - if so, switch back to bug mode
-        if (hasLineOfSight(currentX, currentY, goalX, goalY, obstacles, agentRadius)) {
-            agentPathState.mode = 'bug';
-            agentPathState.path = [];
-            agentPathState.pathIndex = 0;
-            return { x: goalX, y: goalY, mode: 'bug' };
-        }
-        
-        // Follow the path
-        const nextWaypoint = agentPathState.path[agentPathState.pathIndex];
-        
-        // If we're close to the current waypoint, advance to next
-        const distToWaypoint = calculateDistance(currentX, currentY, nextWaypoint.x, nextWaypoint.y);
-        
-        if (distToWaypoint < 5) {
-            agentPathState.pathIndex++;
-            if (agentPathState.pathIndex >= agentPathState.path.length) {
-                // Reached end of path
-                agentPathState.mode = 'bug';
-                agentPathState.path = [];
-                agentPathState.pathIndex = 0;
-                return { x: goalX, y: goalY, mode: 'bug' };
-            }
-            return agentPathState.path[agentPathState.pathIndex];
-        }
-        
-        return { ...nextWaypoint, mode: 'astar' };
+        return agentPathState.path[agentPathState.pathIndex];
     }
     
-    // Unreachable: mode is always 'bug' or 'astar'
-    // This explicit return satisfies exhaustiveness checking
-    throw new Error(`Invalid pathfinding mode: ${agentPathState.mode}`);
+    return { ...nextWaypoint, mode: 'astar' };
 }
 
 /**
@@ -267,7 +261,9 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
             
             // Calculate tentative gScore
             const moveCost = calculateDistance(0, 0, dir.dx, dir.dy);
-            const tentativeGScore = (gScore.get(current.key) || Infinity) + moveCost;
+            const currentGScore = gScore.get(current.key);
+            // currentGScore is guaranteed to exist for nodes we're exploring
+            const tentativeGScore = currentGScore + moveCost;
             
             // Check if this path is better (neighbor not yet scored means Infinity)
             const currentNeighborScore = gScore.get(neighborKey);
