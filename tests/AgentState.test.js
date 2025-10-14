@@ -24,6 +24,17 @@ describe('AgentState', () => {
             expect(typeof state.getName).toBe('function');
             expect(state.getName()).toBe('AgentState');
         });
+        
+        it('should have getColor method', () => {
+            const state = new AgentState();
+            expect(typeof state.getColor).toBe('function');
+        });
+        
+        it('should return null for default getColor', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(state.getColor(agent)).toBe(null);
+        });
     });
     
     describe('IdleState', () => {
@@ -78,6 +89,10 @@ describe('AgentState', () => {
             
             expect(agent.state instanceof MovingState).toBe(true);
             expect(agent.idleTimer).toBe(0);
+        });
+        
+        it('should return dark red color', () => {
+            expect(idleState.getColor(agent)).toBe('#8B0000');
         });
     });
     
@@ -148,6 +163,10 @@ describe('AgentState', () => {
             movingState.update(agent, 0.1, 800, 600);
             
             expect(agent.state instanceof IdleState).toBe(true);
+        });
+        
+        it('should return null for color (use agent type color)', () => {
+            expect(movingState.getColor(agent)).toBe(null);
         });
     });
 });
