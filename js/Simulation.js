@@ -21,8 +21,8 @@ export class Simulation {
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         const agentDiameter = 10; // agent radius = 5, diameter = 10
-        const stallWidth = 80; // 8 agent diameters (wider for vertical line)
-        const stallHeight = 40; // 4 agent diameters (shorter for vertical line)
+        const stallWidth = 40; // 4 agent diameters
+        const stallHeight = 80; // 8 agent diameters (vertical orientation)
         const spacing = 2.5 * agentDiameter; // 25 pixels between stalls
         
         // Position 3rd stall at center, with 2 above and 1 below
