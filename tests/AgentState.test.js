@@ -35,6 +35,36 @@ describe('AgentState', () => {
             const agent = new Agent(100, 200);
             expect(state.getColor(agent)).toBe('magenta');
         });
+
+        it('should call enter without errors with obstacles', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(() => state.enter(agent, 800, 600, [])).not.toThrow();
+        });
+
+        it('should call enter without errors without obstacles parameter', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(() => state.enter(agent, 800, 600)).not.toThrow();
+        });
+
+        it('should call update without errors with obstacles', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(() => state.update(agent, 0.1, 800, 600, [])).not.toThrow();
+        });
+
+        it('should call update without errors without obstacles parameter', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(() => state.update(agent, 0.1, 800, 600)).not.toThrow();
+        });
+
+        it('should call exit without errors', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            expect(() => state.exit(agent)).not.toThrow();
+        });
     });
     
     describe('IdleState', () => {

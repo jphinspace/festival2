@@ -21,8 +21,14 @@ export class Agent {
         this.destinationX = x;
         this.destinationY = y;
         
+        // Obstacles for pathfinding
+        this.obstacles = [];
+        
+        // Pathfinding state (persistent for hybrid bug algorithm)
+        this.pathState = {};
+        
         // Initialize state
-        this.state.enter(this, 0, 0);
+        this.state.enter(this, 0, 0, this.obstacles);
     }
     
     getColorForType(type) {
@@ -38,7 +44,31 @@ export class Agent {
         }
     }
     
-    chooseRandomDestination(canvasWidth, canvasHeight) {
+    chooseRandomDestination(canvasWidth, canvasHeight, obstacles = []) {
+        const agentRadius = this.radius;
+        const maxAttempts = 100;
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const x = Math.random() * canvasWidth;
+            const y = Math.random() * canvasHeight;
+            
+            // Check if this destination collides with any obstacle
+            let collides = false;
+            for (const obstacle of obstacles) {
+                if (obstacle.containsPoint(x, y, agentRadius)) {
+                    collides = true;
+                    break;
+                }
+            }
+            
+            if (!collides) {
+                this.destinationX = x;
+                this.destinationY = y;
+                return;
+            }
+        }
+        
+        // If we couldn't find a spot after maxAttempts, use random location anyway
         this.destinationX = Math.random() * canvasWidth;
         this.destinationY = Math.random() * canvasHeight;
     }
@@ -52,13 +82,16 @@ export class Agent {
     transitionTo(newState, canvasWidth, canvasHeight) {
         this.state.exit(this);
         this.state = newState;
-        this.state.enter(this, canvasWidth, canvasHeight);
+        this.state.enter(this, canvasWidth, canvasHeight, this.obstacles);
     }
     
     // Frame-independent update
-    update(deltaTime, canvasWidth, canvasHeight) {
+    update(deltaTime, canvasWidth, canvasHeight, obstacles = []) {
+        // Update obstacles reference
+        this.obstacles = obstacles;
+        
         // Delegate to current state
-        this.state.update(this, deltaTime, canvasWidth, canvasHeight);
+        this.state.update(this, deltaTime, canvasWidth, canvasHeight, obstacles);
         
         // Clamp position to canvas bounds
         this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));

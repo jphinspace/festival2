@@ -241,5 +241,42 @@ describe('Pathfinding', () => {
             expect(['bug', 'astar']).toContain(mode1);
             expect(['bug', 'astar']).toContain(mode2);
         });
+
+        it('should handle agent at goal location', () => {
+            obstacles = [];
+            agentPathState = {};
+            
+            const result = calculateNextWaypoint(100, 100, 100, 100, obstacles, 5, agentPathState);
+            
+            expect(result.x).toBe(100);
+            expect(result.y).toBe(100);
+        });
+
+        it('should handle very large obstacles that block most paths', () => {
+            // Large obstacle that forces complex pathfinding
+            obstacles = [new Obstacle(400, 300, 700, 500)];
+            agentPathState = {};
+            
+            const result = calculateNextWaypoint(50, 50, 750, 550, obstacles, 5, agentPathState);
+            
+            // Should return some result even if pathfinding is difficult
+            expect(result.x).toBeDefined();
+            expect(result.y).toBeDefined();
+        });
+
+        it('should handle multiple small obstacles', () => {
+            obstacles = [
+                new Obstacle(30, 30, 10, 10),
+                new Obstacle(60, 60, 10, 10),
+                new Obstacle(40, 70, 10, 10)
+            ];
+            agentPathState = {};
+            
+            const result = calculateNextWaypoint(10, 10, 90, 90, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+            expect(result.x).toBeDefined();
+            expect(result.y).toBeDefined();
+        });
     });
 });
