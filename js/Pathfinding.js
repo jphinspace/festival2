@@ -151,7 +151,7 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
     // A* mode: follow computed path
     if (agentPathState.mode === 'astar') {
         // If we've reached the end of the path, switch back to bug mode
-        if (!agentPathState.path || agentPathState.path.length === 0 || agentPathState.pathIndex >= agentPathState.path.length) {
+        if (agentPathState.path.length === 0 || agentPathState.pathIndex >= agentPathState.path.length) {
             agentPathState.mode = 'bug';
             agentPathState.path = [];
             agentPathState.pathIndex = 0;
@@ -186,9 +186,6 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         
         return { ...nextWaypoint, mode: 'astar' };
     }
-    
-    // Fallback
-    return { x: goalX, y: goalY, mode: 'bug' };
 }
 
 /**
@@ -226,10 +223,6 @@ function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRadius) {
         // Get node with lowest fScore
         openSet.sort((a, b) => (fScore.get(a.key) || Infinity) - (fScore.get(b.key) || Infinity));
         const current = openSet.shift();
-        
-        if (!current) {
-            break;
-        }
         
         expansions++;
         closedSet.add(current.key);
