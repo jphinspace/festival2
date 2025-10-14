@@ -89,14 +89,52 @@ describe('Simulation', () => {
             expect(simulation.agents.length).toBe(0);
         });
 
-        it('should create one obstacle in the center', () => {
+        it('should create four vertical food stall obstacles', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.obstacles.length).toBe(1);
-            expect(simulation.obstacles[0].x).toBe(400);
-            expect(simulation.obstacles[0].y).toBe(300);
-            expect(simulation.obstacles[0].width).toBe(40);
-            expect(simulation.obstacles[0].height).toBe(40);
+            expect(simulation.obstacles.length).toBe(4);
+            
+            // All obstacles should be vertically oriented (height > width)
+            simulation.obstacles.forEach(obstacle => {
+                expect(obstacle.width).toBe(40);
+                expect(obstacle.height).toBe(80);
+                expect(obstacle.y).toBe(300); // All at vertical center
+            });
+        });
+
+        it('should space food stalls 2.5x agent diameter apart', () => {
+            const simulation = new Simulation(canvas);
+            const agentDiameter = 10;
+            const expectedSpacing = 2.5 * agentDiameter; // 25 pixels
+            
+            // Check spacing between consecutive stalls
+            for (let i = 0; i < simulation.obstacles.length - 1; i++) {
+                const stall1 = simulation.obstacles[i];
+                const stall2 = simulation.obstacles[i + 1];
+                
+                // Distance between centers minus their widths should equal spacing
+                const centerDistance = stall2.x - stall1.x;
+                const edgeToEdgeDistance = centerDistance - stall1.width;
+                
+                expect(edgeToEdgeDistance).toBeCloseTo(expectedSpacing, 0);
+            }
+        });
+
+        it('should center food stalls horizontally on canvas', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Calculate expected total width
+            const stallWidth = 40;
+            const spacing = 25;
+            const totalWidth = 4 * stallWidth + 3 * spacing;
+            
+            // First stall should start at centered position
+            const expectedStartX = (canvas.width - totalWidth) / 2 + stallWidth / 2;
+            expect(simulation.obstacles[0].x).toBeCloseTo(expectedStartX, 0);
+            
+            // Last stall should end at centered position
+            const expectedEndX = expectedStartX + 3 * (stallWidth + spacing);
+            expect(simulation.obstacles[3].x).toBeCloseTo(expectedEndX, 0);
         });
     });
     

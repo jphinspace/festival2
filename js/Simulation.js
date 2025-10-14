@@ -17,11 +17,22 @@ export class Simulation {
     }
     
     init() {
-        // Create food stall obstacle in center (4 agent diameters = 40 pixels)
-        const centerX = this.canvas.width / 2;
+        // Create 4 vertical food stall obstacles, evenly spaced
         const centerY = this.canvas.height / 2;
-        const obstacleSize = 40; // 4 agent diameters (agent radius = 5)
-        this.obstacles.push(new Obstacle(centerX, centerY, obstacleSize, obstacleSize));
+        const agentDiameter = 10; // agent radius = 5, diameter = 10
+        const stallWidth = 40; // 4 agent diameters
+        const stallHeight = 80; // 8 agent diameters (vertical orientation)
+        const spacing = 2.5 * agentDiameter; // 25 pixels between stalls
+        
+        // Calculate total width and starting position to center all stalls
+        const totalWidth = 4 * stallWidth + 3 * spacing; // 4 stalls + 3 gaps
+        const startX = (this.canvas.width - totalWidth) / 2 + stallWidth / 2;
+        
+        // Create 4 food stall obstacles
+        for (let i = 0; i < 4; i++) {
+            const x = startX + i * (stallWidth + spacing);
+            this.obstacles.push(new Obstacle(x, centerY, stallWidth, stallHeight));
+        }
     }
     
     setTickRate(rate) {
