@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Simulation } from '../js/Simulation.js';
 import { Agent } from '../js/Agent.js';
+import { Obstacle } from '../js/Obstacle.js';
 
 describe('Simulation', () => {
     let canvas;
@@ -37,6 +38,8 @@ describe('Simulation', () => {
             moveTo: jest.fn(),
             lineTo: jest.fn(),
             stroke: jest.fn(),
+            fillRect: jest.fn(),
+            strokeRect: jest.fn(),
             getContext: jest.fn(() => mockCtx)
         };
         
@@ -85,6 +88,16 @@ describe('Simulation', () => {
             
             expect(simulation.agents.length).toBe(0);
         });
+
+        it('should create one obstacle in the center', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.obstacles.length).toBe(1);
+            expect(simulation.obstacles[0].x).toBe(400);
+            expect(simulation.obstacles[0].y).toBe(300);
+            expect(simulation.obstacles[0].width).toBe(40);
+            expect(simulation.obstacles[0].height).toBe(40);
+        });
     });
     
     describe('getSpawnLocation', () => {
@@ -108,6 +121,50 @@ describe('Simulation', () => {
             // Very unlikely to be exactly the same with random values
             const isDifferent = location1.x !== location2.x || location1.y !== location2.y;
             expect(isDifferent).toBe(true);
+        });
+
+        it('should avoid spawning on obstacles when possible', () => {
+            const simulation = new Simulation(canvas);
+            const agentRadius = 5;
+            
+            // Try spawning multiple agents and check they don't collide with obstacle
+            let clearsFound = 0;
+            for (let i = 0; i < 50; i++) {
+                const location = simulation.getSpawnLocation();
+                let collides = false;
+                for (const obstacle of simulation.obstacles) {
+                    if (obstacle.collidesWith(location.x, location.y, agentRadius)) {
+                        collides = true;
+                        break;
+                    }
+                }
+                if (!collides) {
+                    clearsFound++;
+                }
+            }
+            
+            // Most spawns should be clear of obstacles
+            expect(clearsFound).toBeGreaterThan(40);
+        });
+
+        it('should fallback to random location when entire area is covered', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Add large obstacles covering most of the canvas
+            simulation.obstacles = [
+                new Obstacle(200, 200, 400, 400),
+                new Obstacle(600, 200, 400, 400),
+                new Obstacle(200, 500, 400, 400),
+                new Obstacle(600, 500, 400, 400)
+            ];
+            
+            const location = simulation.getSpawnLocation();
+            
+            // Should still return a location
+            expect(location.x).toBeGreaterThanOrEqual(0);
+            expect(location.x).toBeLessThanOrEqual(canvas.width);
+            expect(location.y).toBeGreaterThanOrEqual(0);
+            expect(location.y).toBeLessThanOrEqual(canvas.height);
         });
     });
     
@@ -151,6 +208,15 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             expect(simulation.agents.length).toBe(3);
+        });
+
+        it('should set obstacles reference on spawned agent', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.spawnFanAgent();
+            
+            expect(simulation.agents[0].obstacles).toBeDefined();
+            expect(simulation.agents[0].obstacles).toBe(simulation.obstacles);
         });
     });
     
@@ -207,7 +273,8 @@ describe('Simulation', () => {
             expect(simulation.agents[0].update).toHaveBeenCalledWith(
                 0.1,
                 canvas.width,
-                canvas.height
+                canvas.height,
+                expect.any(Array)
             );
         });
         
@@ -227,7 +294,8 @@ describe('Simulation', () => {
             expect(simulation.agents[0].update).toHaveBeenCalledWith(
                 0.2,
                 canvas.width,
-                canvas.height
+                canvas.height,
+                expect.any(Array)
             );
         });
         
@@ -273,7 +341,8 @@ describe('Simulation', () => {
             expect(simulation.agents[0].update).toHaveBeenCalledWith(
                 expect.any(Number),
                 800,
-                600
+                600,
+                expect.any(Array)
             );
         });
     });

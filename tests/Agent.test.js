@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Agent } from '../js/Agent.js';
 import { IdleState, MovingState } from '../js/AgentState.js';
+import { Obstacle } from '../js/Obstacle.js';
 
 describe('Agent', () => {
     describe('constructor', () => {
@@ -113,6 +114,42 @@ describe('Agent', () => {
             }
             
             expect(changed).toBe(true);
+        });
+
+        it('should avoid obstacles when choosing destination', () => {
+            const obstacles = [new Obstacle(400, 300, 100, 100)];
+            
+            agent.chooseRandomDestination(800, 600, obstacles);
+            
+            // Check that destination doesn't collide with obstacle
+            let collides = false;
+            for (const obstacle of obstacles) {
+                if (obstacle.containsPoint(agent.destinationX, agent.destinationY, agent.radius)) {
+                    collides = true;
+                    break;
+                }
+            }
+            
+            // Most of the time, should avoid obstacle
+            expect(collides).toBe(false);
+        });
+
+        it('should fallback to random location if cannot find clear spot', () => {
+            // Create obstacles that cover almost entire canvas
+            const obstacles = [
+                new Obstacle(200, 200, 400, 400),
+                new Obstacle(600, 200, 400, 400),
+                new Obstacle(200, 500, 400, 200),
+                new Obstacle(600, 500, 400, 200)
+            ];
+            
+            agent.chooseRandomDestination(800, 600, obstacles);
+            
+            // Should still set a destination even if it collides
+            expect(agent.destinationX).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationX).toBeLessThanOrEqual(800);
+            expect(agent.destinationY).toBeGreaterThanOrEqual(0);
+            expect(agent.destinationY).toBeLessThanOrEqual(600);
         });
     });
     
