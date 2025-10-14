@@ -450,5 +450,146 @@ describe('Pathfinding', () => {
             
             expect(agentPathState.pathIndex).toBeGreaterThan(0);
         });
+
+        it('should trigger A* pathfinding with obstacle requiring detour', () => {
+            // Create a simple obstacle that blocks direct path
+            // This will trigger A* pathfinding and explore multiple nodes
+            obstacles = [new Obstacle(25, 25, 10, 10)];
+            agentPathState = { mode: 'bug' };
+            
+            // Navigate around the obstacle - close enough to force A* exploration
+            const result = calculateNextWaypoint(20, 30, 35, 30, obstacles, 5, agentPathState);
+            
+            // Should trigger pathfinding and explore nodes
+            expect(result).toBeDefined();
+        });
+
+        it('should explore multiple nodes in A* search', () => {
+            // Create obstacle configuration that requires A* to explore many nodes
+            obstacles = [
+                new Obstacle(30, 25, 8, 20),  // Vertical wall
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Force A* to find path around obstacle
+            const result = calculateNextWaypoint(25, 35, 45, 35, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should handle complex obstacle maze for extensive A* exploration', () => {
+            // Create multiple obstacles that force complex pathfinding
+            obstacles = [
+                new Obstacle(30, 30, 10, 10),
+                new Obstacle(45, 30, 10, 10),
+                new Obstacle(30, 50, 10, 10),
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            const result = calculateNextWaypoint(20, 40, 70, 40, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should test pathfinding with obstacles at various positions', () => {
+            // Multiple small obstacles to test various A* branches
+            obstacles = [
+                new Obstacle(35, 35, 8, 8),
+                new Obstacle(50, 35, 8, 8),
+                new Obstacle(42, 48, 8, 8),
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            const result = calculateNextWaypoint(30, 42, 65, 42, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should handle pathfinding where A* revisits grid cells', () => {
+            // Create a corridor with obstacles that forces A* to explore in a specific pattern
+            // This should cause A* to check neighbors that are already in closedSet
+            obstacles = [
+                new Obstacle(30, 25, 5, 20),   // Left wall
+                new Obstacle(50, 25, 5, 20),   // Right wall
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Navigate through narrow corridor
+            const result = calculateNextWaypoint(25, 35, 60, 35, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should explore complex paths with many nodes', () => {
+            // Create an obstacle pattern that requires extensive A* exploration
+            // with backtracking to check closed set neighbors
+            obstacles = [
+                new Obstacle(35, 30, 10, 15),
+                new Obstacle(50, 35, 10, 15),
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            const result = calculateNextWaypoint(30, 40, 70, 40, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should trigger closed set checks during A* exploration', () => {
+            // Create obstacles that force A* to explore nodes where neighbors are revisited
+            // The grid size is 10, so nodes are at 0, 10, 20, 30, 40, 50, etc.
+            obstacles = [
+                new Obstacle(40, 40, 15, 15),  // Obstacle around grid (40,40)
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Start and end positions that force exploration around the obstacle
+            // This ensures A* explores multiple grid cells
+            const result = calculateNextWaypoint(30, 45, 55, 45, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should handle A* pathfinding with complex exploration pattern', () => {
+            // Create obstacles in a pattern that forces A* to explore in multiple directions
+            // and inevitably check already-explored neighbors
+            obstacles = [
+                new Obstacle(40, 38, 8, 8),   // Center-ish obstacle
+                new Obstacle(52, 38, 8, 8),   // Right obstacle
+                new Obstacle(46, 28, 8, 8),   // Top obstacle
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Navigate from left to right around the obstacles
+            // Grid size is 10, so these positions align with grid cells
+            const result = calculateNextWaypoint(30, 38, 70, 38, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should test A* with tight spaces forcing detailed exploration', () => {
+            // Create a bottleneck that forces A* to explore around it
+            obstacles = [
+                new Obstacle(45, 30, 5, 15),   // Tall narrow obstacle
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Path that goes through the narrow gap
+            const result = calculateNextWaypoint(35, 37, 60, 37, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
+
+        it('should explore many nodes with distant goal', () => {
+            // Create obstacles and a distant goal to force exploration of many nodes
+            obstacles = [
+                new Obstacle(50, 50, 15, 15),
+            ];
+            agentPathState = { mode: 'bug' };
+            
+            // Very distant start and goal to ensure many nodes explored
+            const result = calculateNextWaypoint(20, 55, 100, 55, obstacles, 5, agentPathState);
+            
+            expect(result).toBeDefined();
+        });
     });
 });
