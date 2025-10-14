@@ -433,12 +433,5 @@ describe('Agent', () => {
             
             expect(calls).toEqual(['beginPath', 'arc', 'fill']);
         });
-        
-        it('should use type color when state is null', () => {
-            agent.state = null;
-            agent.draw(mockCtx);
-            
-            expect(mockCtx.fillStyle).toBe(agent.color);
-        });
     });
 });

@@ -30,10 +30,10 @@ describe('AgentState', () => {
             expect(typeof state.getColor).toBe('function');
         });
         
-        it('should return null for default getColor', () => {
+        it('should return empty string for default getColor', () => {
             const state = new AgentState();
             const agent = new Agent(100, 200);
-            expect(state.getColor(agent)).toBe(null);
+            expect(state.getColor(agent)).toBe('');
         });
     });
     
@@ -165,8 +165,8 @@ describe('AgentState', () => {
             expect(agent.state instanceof IdleState).toBe(true);
         });
         
-        it('should return null for color (use agent type color)', () => {
-            expect(movingState.getColor(agent)).toBe(null);
+        it('should return empty string for color (use agent type color)', () => {
+            expect(movingState.getColor(agent)).toBe('');
         });
     });
 });

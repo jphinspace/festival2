@@ -40,10 +40,10 @@ export class AgentState {
     /**
      * Returns the default color for this state
      * @param {Agent} agent - The agent to get color for
-     * @returns {string|null} The color string, or null to use agent's type color
+     * @returns {string} The color string, or empty string to use agent's type color
      */
     getColor(agent) {
-        return null; // Default: use agent's type color
+        return ''; // Default: use agent's type color
     }
 }
 
