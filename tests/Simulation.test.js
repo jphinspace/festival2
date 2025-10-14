@@ -92,15 +92,15 @@ describe('Simulation', () => {
         it('should create four food stall obstacles in a vertical line', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.obstacles.length).toBe(4);
+            expect(simulation.obstacles.length).toBe(6); // 4 food stalls + 2 walls
             
-            // All obstacles should be in a vertical line (same x, different y)
+            // First 4 obstacles should be food stalls in a vertical line
             // with original square dimensions (40x40)
-            simulation.obstacles.forEach(obstacle => {
-                expect(obstacle.width).toBe(40);
-                expect(obstacle.height).toBe(40);
-                expect(obstacle.x).toBe(400); // All at horizontal center
-            });
+            for (let i = 0; i < 4; i++) {
+                expect(simulation.obstacles[i].width).toBe(40);
+                expect(simulation.obstacles[i].height).toBe(40);
+                expect(simulation.obstacles[i].x).toBe(400); // All at horizontal center
+            }
         });
 
         it('should space food stalls 2.5x agent diameter apart vertically', () => {
@@ -108,8 +108,8 @@ describe('Simulation', () => {
             const agentDiameter = 10;
             const expectedSpacing = 2.5 * agentDiameter; // 25 pixels
             
-            // Check spacing between consecutive stalls
-            for (let i = 0; i < simulation.obstacles.length - 1; i++) {
+            // Check spacing between consecutive food stalls (first 4 obstacles)
+            for (let i = 0; i < 3; i++) {
                 const stall1 = simulation.obstacles[i];
                 const stall2 = simulation.obstacles[i + 1];
                 
@@ -133,6 +133,58 @@ describe('Simulation', () => {
             
             // Verify 1 stall below center
             expect(simulation.obstacles[3].y).toBeGreaterThan(300);
+        });
+
+        it('should create two wall obstacles at the bottom', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Last two obstacles should be walls
+            const leftWall = simulation.obstacles[4];
+            const rightWall = simulation.obstacles[5];
+            
+            // Walls should have proper dimensions (45% width, 20% height)
+            const expectedWidth = canvas.width * 0.45;
+            const expectedHeight = canvas.height / 5;
+            
+            expect(leftWall.width).toBeCloseTo(expectedWidth, 0);
+            expect(leftWall.height).toBeCloseTo(expectedHeight, 0);
+            expect(rightWall.width).toBeCloseTo(expectedWidth, 0);
+            expect(rightWall.height).toBeCloseTo(expectedHeight, 0);
+            
+            // Walls should be at bottom of canvas
+            const expectedY = canvas.height - expectedHeight / 2;
+            expect(leftWall.y).toBeCloseTo(expectedY, 0);
+            expect(rightWall.y).toBeCloseTo(expectedY, 0);
+            
+            // Left wall should be on left side
+            expect(leftWall.x).toBeCloseTo(expectedWidth / 2, 0);
+            
+            // Right wall should be on right side
+            expect(rightWall.x).toBeCloseTo(canvas.width - expectedWidth / 2, 0);
+        });
+
+        it('should create one entranceway special movement zone', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.specialMovementZones.length).toBe(1);
+            
+            const zone = simulation.specialMovementZones[0];
+            expect(zone.type).toBe('entranceway');
+            
+            // Zone should be 10% width in the center gap
+            const expectedWidth = canvas.width * 0.1;
+            expect(zone.width).toBeCloseTo(expectedWidth, 0);
+            
+            // Zone should have same height as walls
+            const expectedHeight = canvas.height / 5;
+            expect(zone.height).toBeCloseTo(expectedHeight, 0);
+            
+            // Zone should be centered horizontally
+            expect(zone.x).toBe(canvas.width / 2);
+            
+            // Zone should be at bottom
+            const expectedY = canvas.height - expectedHeight / 2;
+            expect(zone.y).toBeCloseTo(expectedY, 0);
         });
     });
     
@@ -187,6 +239,79 @@ describe('Simulation', () => {
             const simulation = new Simulation(canvas);
             
             // Add large obstacles covering most of the canvas
+            simulation.obstacles = [
+                new Obstacle(200, 200, 400, 400),
+                new Obstacle(600, 200, 400, 400),
+                new Obstacle(200, 500, 400, 400),
+                new Obstacle(600, 500, 400, 400)
+            ];
+            
+            const location = simulation.getSpawnLocation();
+            
+            // Should still return a location
+            expect(location.x).toBeGreaterThanOrEqual(0);
+            expect(location.x).toBeLessThanOrEqual(canvas.width);
+            expect(location.y).toBeGreaterThanOrEqual(0);
+            expect(location.y).toBeLessThanOrEqual(canvas.height);
+        });
+
+        it('should spawn inside entranceway zone', () => {
+            const simulation = new Simulation(canvas);
+            
+            const entranceway = simulation.specialMovementZones[0];
+            const bounds = entranceway.getBounds();
+            
+            // Test multiple spawn locations
+            for (let i = 0; i < 20; i++) {
+                const location = simulation.getSpawnLocation();
+                
+                // Should be inside entranceway bounds
+                expect(location.x).toBeGreaterThanOrEqual(bounds.left);
+                expect(location.x).toBeLessThanOrEqual(bounds.right);
+                expect(location.y).toBeGreaterThanOrEqual(bounds.top);
+                expect(location.y).toBeLessThanOrEqual(bounds.bottom);
+            }
+        });
+
+        it('should fallback to entranceway location when no clear spots exist', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Cover the entranceway with a large obstacle (impossible scenario but tests fallback)
+            const entranceway = simulation.specialMovementZones[0];
+            simulation.obstacles.push(new Obstacle(entranceway.x, entranceway.y, entranceway.width, entranceway.height));
+            
+            const location = simulation.getSpawnLocation();
+            
+            const bounds = entranceway.getBounds();
+            // Should still return a location in entranceway
+            expect(location.x).toBeGreaterThanOrEqual(bounds.left);
+            expect(location.x).toBeLessThanOrEqual(bounds.right);
+            expect(location.y).toBeGreaterThanOrEqual(bounds.top);
+            expect(location.y).toBeLessThanOrEqual(bounds.bottom);
+        });
+
+        it('should fallback to old behavior when no entranceway zone exists', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Remove entranceway zone to test fallback
+            simulation.specialMovementZones = [];
+            
+            const location = simulation.getSpawnLocation();
+            
+            // Should still return a location
+            expect(location.x).toBeGreaterThanOrEqual(0);
+            expect(location.x).toBeLessThanOrEqual(canvas.width);
+            expect(location.y).toBeGreaterThanOrEqual(0);
+            expect(location.y).toBeLessThanOrEqual(canvas.height);
+        });
+
+        it('should fallback to random location when no zone exists and entire area is covered', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Remove entranceway zone
+            simulation.specialMovementZones = [];
+            
+            // Cover entire canvas with obstacles
             simulation.obstacles = [
                 new Obstacle(200, 200, 400, 400),
                 new Obstacle(600, 200, 400, 400),

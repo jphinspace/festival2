@@ -24,6 +24,9 @@ export class Agent {
         // Obstacles for pathfinding
         this.obstacles = [];
         
+        // Special movement zones
+        this.specialMovementZones = [];
+        
         // Pathfinding state (persistent for hybrid bug algorithm)
         this.pathState = {};
         
@@ -58,6 +61,17 @@ export class Agent {
                 if (obstacle.containsPoint(x, y, agentRadius)) {
                     collides = true;
                     break;
+                }
+            }
+            
+            // Check if this destination is inside any special movement zone
+            // (treat zones as obstacles for destination selection only)
+            if (!collides && this.specialMovementZones) {
+                for (const zone of this.specialMovementZones) {
+                    if (zone.containsPoint(x, y, agentRadius)) {
+                        collides = true;
+                        break;
+                    }
                 }
             }
             
