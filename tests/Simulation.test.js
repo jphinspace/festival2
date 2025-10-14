@@ -75,35 +75,82 @@ describe('Simulation', () => {
         it('should call init on construction', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.agents.length).toBe(50);
+            expect(simulation.agents.length).toBe(0);
         });
     });
     
     describe('init', () => {
-        it('should create 50 fan agents', () => {
+        it('should not create any agents initially', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.agents.length).toBe(50);
+            expect(simulation.agents.length).toBe(0);
+        });
+    });
+    
+    describe('getSpawnLocation', () => {
+        it('should return a location within canvas bounds', () => {
+            const simulation = new Simulation(canvas);
+            
+            const location = simulation.getSpawnLocation();
+            
+            expect(location.x).toBeGreaterThanOrEqual(0);
+            expect(location.x).toBeLessThanOrEqual(canvas.width);
+            expect(location.y).toBeGreaterThanOrEqual(0);
+            expect(location.y).toBeLessThanOrEqual(canvas.height);
         });
         
-        it('should create agents with positions within canvas bounds', () => {
+        it('should return different locations on multiple calls', () => {
             const simulation = new Simulation(canvas);
             
-            simulation.agents.forEach(agent => {
-                expect(agent.x).toBeGreaterThanOrEqual(0);
-                expect(agent.x).toBeLessThanOrEqual(canvas.width);
-                expect(agent.y).toBeGreaterThanOrEqual(0);
-                expect(agent.y).toBeLessThanOrEqual(canvas.height);
-            });
+            const location1 = simulation.getSpawnLocation();
+            const location2 = simulation.getSpawnLocation();
+            
+            // Very unlikely to be exactly the same with random values
+            const isDifferent = location1.x !== location2.x || location1.y !== location2.y;
+            expect(isDifferent).toBe(true);
+        });
+    });
+    
+    describe('spawnFanAgent', () => {
+        it('should add one agent to the agents array', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.agents.length).toBe(0);
+            
+            simulation.spawnFanAgent();
+            
+            expect(simulation.agents.length).toBe(1);
         });
         
-        it('should create all agents with fan type', () => {
+        it('should create a fan type agent', () => {
             const simulation = new Simulation(canvas);
             
-            simulation.agents.forEach(agent => {
-                expect(agent.type).toBe('fan');
-                expect(agent instanceof Agent).toBe(true);
-            });
+            simulation.spawnFanAgent();
+            
+            expect(simulation.agents[0].type).toBe('fan');
+            expect(simulation.agents[0] instanceof Agent).toBe(true);
+        });
+        
+        it('should place agent at spawn location', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.spawnFanAgent();
+            
+            const agent = simulation.agents[0];
+            expect(agent.x).toBeGreaterThanOrEqual(0);
+            expect(agent.x).toBeLessThanOrEqual(canvas.width);
+            expect(agent.y).toBeGreaterThanOrEqual(0);
+            expect(agent.y).toBeLessThanOrEqual(canvas.height);
+        });
+        
+        it('should add multiple agents when called multiple times', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            expect(simulation.agents.length).toBe(3);
         });
     });
     
@@ -148,6 +195,9 @@ describe('Simulation', () => {
             const simulation = new Simulation(canvas);
             simulation.lastTime = 1000;
             
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
+            
             // Mock agent update to track deltaTime
             simulation.agents[0].update = jest.fn();
             
@@ -165,6 +215,9 @@ describe('Simulation', () => {
             const simulation = new Simulation(canvas);
             simulation.lastTime = 1000;
             simulation.setTickRate(2.0);
+            
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
             
             simulation.agents[0].update = jest.fn();
             
@@ -190,6 +243,11 @@ describe('Simulation', () => {
         it('should update all agents', () => {
             const simulation = new Simulation(canvas);
             
+            // Spawn some agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
             // Mock all agent updates
             simulation.agents.forEach(agent => {
                 agent.update = jest.fn();
@@ -204,6 +262,10 @@ describe('Simulation', () => {
         
         it('should pass canvas dimensions to agent update', () => {
             const simulation = new Simulation(canvas);
+            
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
+            
             simulation.agents[0].update = jest.fn();
             
             simulation.update(1100);
@@ -228,6 +290,10 @@ describe('Simulation', () => {
         it('should draw all agents', () => {
             const simulation = new Simulation(canvas);
             
+            // Spawn some agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
             // Mock all agent draw methods
             simulation.agents.forEach(agent => {
                 agent.draw = jest.fn();
@@ -244,6 +310,9 @@ describe('Simulation', () => {
             const simulation = new Simulation(canvas);
             simulation.showDestinations = true;
             
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
+            
             simulation.agents[0].draw = jest.fn();
             
             simulation.draw();
@@ -256,6 +325,9 @@ describe('Simulation', () => {
             const calls = [];
             
             mockCtx.clearRect = jest.fn(() => calls.push('clear'));
+            
+            // Spawn an agent to test with
+            simulation.spawnFanAgent();
             simulation.agents[0].draw = jest.fn(() => calls.push('draw'));
             
             simulation.draw();

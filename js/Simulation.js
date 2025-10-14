@@ -15,13 +15,7 @@ export class Simulation {
     }
     
     init() {
-        // Create initial fan agents
-        const numFans = 50;
-        for (let i = 0; i < numFans; i++) {
-            const x = Math.random() * this.canvas.width;
-            const y = Math.random() * this.canvas.height;
-            this.agents.push(new Agent(x, y, 'fan'));
-        }
+        // No initial agents - they will be spawned via button
     }
     
     setTickRate(rate) {
@@ -31,6 +25,18 @@ export class Simulation {
     toggleDestinations() {
         this.showDestinations = !this.showDestinations;
         return this.showDestinations;
+    }
+    
+    getSpawnLocation() {
+        return {
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height
+        };
+    }
+    
+    spawnFanAgent() {
+        const location = this.getSpawnLocation();
+        this.agents.push(new Agent(location.x, location.y, 'fan'));
     }
     
     update(currentTime) {
