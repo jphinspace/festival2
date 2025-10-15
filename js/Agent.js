@@ -1,14 +1,17 @@
 import { IdleState } from './AgentState.js';
+import { DynamicObstacle } from './DynamicObstacle.js';
 
 // Agent class representing festival attendees
-export class Agent {
+export class Agent extends DynamicObstacle {
     constructor(x, y, type = 'fan') {
-        this.x = x;
-        this.y = y;
+        // Agent is a circular obstacle with diameter = 2 * radius
+        const radius = 5;
+        super(x, y, radius * 2, radius * 2);
+        
         this.type = type;
         this.vx = (Math.random() - 0.5) * 100; // velocity in pixels per second
         this.vy = (Math.random() - 0.5) * 100;
-        this.radius = 5;
+        this.radius = radius;
         
         // Color based on type
         this.color = this.getColorForType(type);
@@ -51,13 +54,16 @@ export class Agent {
         const agentRadius = this.radius;
         const maxAttempts = 100;
         
+        // Filter to only check static obstacles for destination selection
+        const staticObstacles = obstacles.filter(obs => !(obs instanceof DynamicObstacle));
+        
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             const x = Math.random() * canvasWidth;
             const y = Math.random() * canvasHeight;
             
-            // Check if this destination collides with any obstacle
+            // Check if this destination collides with any static obstacle
             let collides = false;
-            for (const obstacle of obstacles) {
+            for (const obstacle of staticObstacles) {
                 if (obstacle.containsPoint(x, y, agentRadius)) {
                     collides = true;
                     break;

@@ -1,5 +1,5 @@
 import { Agent } from './Agent.js';
-import { Obstacle } from './Obstacle.js';
+import { FoodStall } from './FoodStall.js';
 import { Wall } from './Wall.js';
 import { SpecialMovementZone } from './SpecialMovementZone.js';
 
@@ -39,7 +39,7 @@ export class Simulation {
         
         // Create 4 food stall obstacles in vertical line
         for (let i = 0; i < 4; i++) {
-            this.obstacles.push(new Obstacle(centerX, yPositions[i], obstacleSize, obstacleSize));
+            this.obstacles.push(new FoodStall(centerX, yPositions[i], obstacleSize, obstacleSize));
         }
         
         // Create entranceway zone with walls
@@ -165,7 +165,11 @@ export class Simulation {
         for (const agent of this.agents) {
             agent.obstacles = this.obstacles;
             agent.specialMovementZones = this.specialMovementZones;
-            agent.update(deltaTime, this.canvas.width, this.canvas.height, this.obstacles);
+            
+            // Create obstacles array including all agents except current one (as dynamic obstacles)
+            const allObstacles = [...this.obstacles, ...this.agents.filter(a => a !== agent)];
+            
+            agent.update(deltaTime, this.canvas.width, this.canvas.height, allObstacles);
         }
     }
     

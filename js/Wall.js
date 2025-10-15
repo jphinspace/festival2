@@ -1,7 +1,7 @@
-import { Obstacle } from './Obstacle.js';
+import { StaticObstacle } from './StaticObstacle.js';
 
 // Wall class - a type of static obstacle with different visual design
-export class Wall extends Obstacle {
+export class Wall extends StaticObstacle {
     /**
      * Create a wall obstacle
      * @param {number} x - X coordinate of the center

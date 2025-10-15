@@ -1,4 +1,5 @@
 import { calculateNextWaypoint } from './Pathfinding.js';
+import { DynamicObstacle } from './DynamicObstacle.js';
 
 // Base state class for agent state machine
 export class AgentState {
@@ -86,7 +87,9 @@ export class IdleState extends AgentState {
 export class MovingState extends AgentState {
     enter(agent, canvasWidth, canvasHeight, obstacles = []) {
         agent.idleTimer = 0;
-        agent.chooseRandomDestination(canvasWidth, canvasHeight, obstacles);
+        // Filter to only static obstacles for destination selection
+        const staticObstacles = obstacles.filter(obs => !(obs instanceof DynamicObstacle));
+        agent.chooseRandomDestination(canvasWidth, canvasHeight, staticObstacles);
         // Reset pathfinding state for new destination
         agent.pathState = {};
     }
