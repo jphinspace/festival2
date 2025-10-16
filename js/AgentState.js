@@ -127,8 +127,25 @@ export class MovingState extends AgentState {
                 // Normalize direction and apply velocity
                 const dirX = waypointDx / waypointDist;
                 const dirY = waypointDy / waypointDist;
-                agent.x += dirX * speed * deltaTime;
-                agent.y += dirY * speed * deltaTime;
+                const newX = agent.x + dirX * speed * deltaTime;
+                const newY = agent.y + dirY * speed * deltaTime;
+                
+                // Check if new position would collide with any obstacles
+                let wouldCollide = false;
+                for (const obstacle of obstacles) {
+                    if (obstacle.collidesWith(newX, newY, agent.radius)) {
+                        wouldCollide = true;
+                        break;
+                    }
+                }
+                
+                // Only move if the new position doesn't collide
+                if (!wouldCollide) {
+                    agent.x = newX;
+                    agent.y = newY;
+                }
+                // If collision would occur, agent stays in current position
+                // and will recalculate path on next update
             }
         }
     }
