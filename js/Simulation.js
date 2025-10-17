@@ -163,6 +163,7 @@ export class Simulation {
         
         // Update all agents
         for (const agent of this.agents) {
+            agent.obstacles = this.obstacles;
             agent.specialMovementZones = this.specialMovementZones;
             
             // Create obstacles array including all agents except current one (as dynamic obstacles)
