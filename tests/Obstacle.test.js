@@ -203,24 +203,12 @@ describe('Obstacle', () => {
             };
         });
 
-        it('should draw pale yellow bottom half', () => {
+        it('should draw magenta rectangle', () => {
             obstacle.draw(mockCtx);
             
-            // Check that fillStyle was set to pale yellow
-            const fillRectCalls = mockCtx.fillRect.mock.calls;
-            const paleYellowCall = fillRectCalls.find((call, index) => {
-                return mockCtx.fillStyle === '#FFFFE0' || 
-                       (index > 0 && fillRectCalls[index - 1] && mockCtx.fillRect.mock.invocationCallOrder[index] > 0);
-            });
-            
-            expect(fillRectCalls.length).toBeGreaterThan(0);
-        });
-
-        it('should draw red and white stripes on top half', () => {
-            obstacle.draw(mockCtx);
-            
-            // Should have multiple fillRect calls for stripes
-            expect(mockCtx.fillRect.mock.calls.length).toBeGreaterThan(6);
+            // Check that fillStyle was set to magenta
+            expect(mockCtx.fillStyle).toBe('#FF00FF');
+            expect(mockCtx.fillRect).toHaveBeenCalledTimes(1);
         });
 
         it('should draw border', () => {
