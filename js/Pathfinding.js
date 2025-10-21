@@ -259,6 +259,11 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
                 continue;
             }
             
+            // Skip if no line of sight from current to neighbor
+            if (!hasLineOfSight(current.x, current.y, neighborX, neighborY, obstacles, agentRadius)) {
+                continue;
+            }
+            
             // Calculate tentative gScore
             const moveCost = calculateDistance(0, 0, dir.dx, dir.dy);
             const currentGScore = gScore.get(current.key);
