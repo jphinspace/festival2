@@ -220,6 +220,117 @@ describe('Pathfinding', () => {
             
             expect(result).toBe(false);
         });
+
+        describe('full radius clearance checking', () => {
+            it('should detect obstacles that only block the edge of the agent\'s body', () => {
+                // Horizontal path at y=50
+                // Small obstacle slightly above the centerline that would clip the top edge of the agent
+                const obstacles = [new Obstacle(50, 48, 6, 2)]; // x: 47-53, y: 47-49
+                
+                // Agent with radius 5 at y=50 extends from y=45 to y=55
+                // Obstacle at y=47-49 would clip the top edge
+                const result = hasLineOfSight(0, 50, 100, 50, obstacles, 5);
+                
+                expect(result).toBe(false);
+            });
+
+            it('should allow passage when full radius has clearance', () => {
+                // Horizontal path at y=50
+                // Obstacle well below the agent's body
+                const obstacles = [new Obstacle(50, 60, 6, 2)]; // x: 47-53, y: 59-61
+                
+                // Agent with radius 5 at y=50 extends from y=45 to y=55
+                // Obstacle at y=59-61 is clear
+                const result = hasLineOfSight(0, 50, 100, 50, obstacles, 5);
+                
+                expect(result).toBe(true);
+            });
+
+            it('should check perpendicular clearance for diagonal paths', () => {
+                // Diagonal from (0, 0) to (100, 100)
+                // At x=50, diagonal is at y=50
+                // Place obstacle slightly to the side that would clip the agent's edge
+                const obstacles = [new Obstacle(48, 52, 2, 2)]; // x: 47-49, y: 51-53
+                
+                // Agent with radius 5 moving diagonally
+                // The perpendicular offset checks should detect this obstacle
+                const result = hasLineOfSight(0, 0, 100, 100, obstacles, 5);
+                
+                expect(result).toBe(false);
+            });
+
+            it('should handle narrow corridors correctly', () => {
+                // Two walls forming a vertical corridor
+                const leftWall = new Obstacle(40, 50, 10, 100);  // x: 35-45
+                const rightWall = new Obstacle(60, 50, 10, 100); // x: 55-65
+                const obstacles = [leftWall, rightWall];
+                
+                // Corridor width is 10 pixels (from x=45 to x=55)
+                // Agent with diameter 10 (radius 5) should just barely not fit
+                const resultTight = hasLineOfSight(50, 10, 50, 90, obstacles, 5);
+                expect(resultTight).toBe(false);
+                
+                // Agent with diameter 8 (radius 4) should fit
+                const resultFit = hasLineOfSight(50, 10, 50, 90, obstacles, 4);
+                expect(resultFit).toBe(true);
+            });
+
+            it('should verify clearance through gaps between obstacles', () => {
+                // Two obstacles with a gap between them
+                const topObstacle = new Obstacle(50, 30, 20, 20);    // y: 20-40
+                const bottomObstacle = new Obstacle(50, 70, 20, 20); // y: 60-80
+                const obstacles = [topObstacle, bottomObstacle];
+                
+                // Gap from y=40 to y=60, height = 20 pixels
+                // Horizontal path through the gap at y=50
+                
+                // Agent with diameter 18 (radius 9) should fit through gap of 20
+                const resultFit = hasLineOfSight(30, 50, 70, 50, obstacles, 9);
+                expect(resultFit).toBe(true);
+                
+                // Agent with diameter 22 (radius 11) should not fit through gap of 20
+                const resultNoFit = hasLineOfSight(30, 50, 70, 50, obstacles, 11);
+                expect(resultNoFit).toBe(false);
+            });
+
+            it('should check both left and right perpendicular offsets', () => {
+                // Path from left to right
+                // Obstacle on the right side of the path
+                const rightObstacle = new Obstacle(52, 50, 2, 2); // x: 51-53, y: 49-51
+                const obstacles = [rightObstacle];
+                
+                // Horizontal path at y=50
+                // Agent with radius 5 extends from y=45 to y=55 vertically
+                // and from x-5 to x+5 horizontally at any point
+                // The right edge check should detect the obstacle
+                const result = hasLineOfSight(0, 50, 100, 50, obstacles, 5);
+                
+                expect(result).toBe(false);
+            });
+
+            it('should handle diagonal paths with perpendicular obstacles', () => {
+                // Diagonal from (0, 0) to (100, 100)
+                // Small obstacle perpendicular to the path
+                // At point (50, 50) on the diagonal, perpendicular direction is roughly (-1, 1) normalized
+                const obstacles = [new Obstacle(54, 46, 2, 2)]; // x: 53-55, y: 45-47
+                
+                // This obstacle is positioned perpendicular to the diagonal
+                // Should be caught by the edge checks
+                const result = hasLineOfSight(0, 0, 100, 100, obstacles, 5);
+                
+                expect(result).toBe(false);
+            });
+
+            it('should allow diagonal movement when edges are clear', () => {
+                // Diagonal from (0, 0) to (100, 100)
+                // Obstacle well away from the path
+                const obstacles = [new Obstacle(20, 80, 4, 4)];
+                
+                const result = hasLineOfSight(0, 0, 100, 100, obstacles, 5);
+                
+                expect(result).toBe(true);
+            });
+        });
     });
 
     describe('calculateNextWaypoint', () => {
