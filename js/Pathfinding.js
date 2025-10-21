@@ -79,6 +79,11 @@ export function reconstructPath(currentNode, cameFrom, goalX, goalY) {
 
 /**
  * Check if there's a clear line of sight between two points (no obstacles)
+ * This function checks if an agent with the given radius can move from (x1, y1) to (x2, y2)
+ * without colliding with any obstacles. It samples points along the centerline and also
+ * checks parallel paths offset by the agent's radius to ensure the full circular body
+ * of the agent has clearance.
+ * 
  * @param {number} x1 - Start X
  * @param {number} y1 - Start Y
  * @param {number} x2 - End X
@@ -95,20 +100,42 @@ export function hasLineOfSight(x1, y1, x2, y2, obstacles, agentRadius) {
         return true;
     }
     
-    // Sample at regular intervals (every 2 pixels)
-    const steps = Math.ceil(distance / 2);
+    // Calculate unit direction vector
     const dx = x2 - x1;
     const dy = y2 - y1;
+    const unitDx = dx / distance;
+    const unitDy = dy / distance;
+    
+    // Calculate perpendicular unit vector (rotated 90 degrees)
+    const perpDx = -unitDy;
+    const perpDy = unitDx;
+    
+    // Sample at regular intervals (every 2 pixels)
+    const steps = Math.ceil(distance / 2);
+    
+    // Check multiple parallel paths: center, left edge, and right edge of the agent's body
+    // We check at offsets of 0 (center), -agentRadius (left), and +agentRadius (right)
+    const offsets = [0, -agentRadius, agentRadius];
     
     for (let i = 0; i <= steps; i++) {
         const t = i / steps;
-        const x = x1 + dx * t;
-        const y = y1 + dy * t;
+        const centerX = x1 + dx * t;
+        const centerY = y1 + dy * t;
         
-        // Check if this point collides with any obstacle
-        for (const obstacle of obstacles) {
-            if (obstacle.collidesWith(x, y, agentRadius)) {
-                return false;
+        // Check each offset path
+        for (const offset of offsets) {
+            const x = centerX + perpDx * offset;
+            const y = centerY + perpDy * offset;
+            
+            // Check if this point collides with any obstacle
+            // Note: when checking offset paths (left/right edges), we use a smaller effective radius
+            // since we're already checking the edge of the agent's body
+            const effectiveRadius = (offset === 0) ? agentRadius : 0;
+            
+            for (const obstacle of obstacles) {
+                if (obstacle.collidesWith(x, y, effectiveRadius)) {
+                    return false;
+                }
             }
         }
     }
