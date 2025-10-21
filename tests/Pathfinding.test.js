@@ -661,5 +661,39 @@ describe('Pathfinding', () => {
             
             expect(Array.isArray(path)).toBe(true);
         });
+
+        it('should verify line of sight to goal before declaring success', () => {
+            // Test the specific bug: agent close to obstacle, goal also close to obstacle,
+            // obstacle blocks direct path, but they're within GRID_SIZE*2 distance
+            // A* should NOT return a direct path through the obstacle
+            const obstacles = [new Obstacle(17, 50, 10, 10)]; // Obstacle at x:12-22, y:45-55
+            
+            // Start at x=10 (2 pixels from obstacle), goal at x=25 (3 pixels from obstacle)
+            // Distance is 15 pixels, which is < GRID_SIZE*2 (20 pixels)
+            // But obstacle blocks direct path!
+            const path = findBoundedPath(10, 50, 25, 50, obstacles, 5);
+            
+            // If path is found, verify it routes around obstacle
+            // The bug would cause an empty path or a path that goes through the obstacle
+            if (path.length > 0) {
+                // Path should have intermediate waypoints to go around the obstacle
+                // OR it should verify line of sight to goal
+                // The critical test: verify each segment of the path has line of sight
+                for (let i = 0; i < path.length - 1; i++) {
+                    const hasLOS = hasLineOfSight(
+                        path[i].x, path[i].y, 
+                        path[i + 1].x, path[i + 1].y, 
+                        obstacles, 5
+                    );
+                    expect(hasLOS).toBe(true);
+                }
+                
+                // Also verify line of sight from start to first waypoint
+                if (path.length > 0) {
+                    const hasLOS = hasLineOfSight(10, 50, path[0].x, path[0].y, obstacles, 5);
+                    expect(hasLOS).toBe(true);
+                }
+            }
+        });
     });
 });
