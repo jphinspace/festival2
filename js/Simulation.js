@@ -1,6 +1,7 @@
 import { Agent } from './Agent.js';
 import { Obstacle } from './Obstacle.js';
 import { Wall } from './Wall.js';
+import { FoodStall } from './FoodStall.js';
 import { SpecialMovementZone } from './SpecialMovementZone.js';
 
 // Simulation class
@@ -39,7 +40,7 @@ export class Simulation {
         
         // Create 4 food stall obstacles in vertical line
         for (let i = 0; i < 4; i++) {
-            this.obstacles.push(new Obstacle(centerX, yPositions[i], obstacleSize, obstacleSize));
+            this.obstacles.push(new FoodStall(centerX, yPositions[i], obstacleSize, obstacleSize));
         }
         
         // Create entranceway zone with walls
