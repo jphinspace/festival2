@@ -213,9 +213,13 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
     let actualStartX = startX;
     let actualStartY = startY;
     if (!isPositionValid(startX, startY, obstacles, agentRadius)) {
-        // Search for nearest valid position in a spiral pattern
+        // Search for nearest valid position, preferring positions closer to goal
         const searchRadius = GRID_SIZE * 10; // Search up to 10 grid cells (100 pixels) away
         let found = false;
+        let bestX = startX;
+        let bestY = startY;
+        let bestDist = Infinity;
+        
         for (let r = GRID_SIZE; r <= searchRadius; r += GRID_SIZE) {
             // Try 8 directions at this radius
             const directions = [
@@ -226,17 +230,37 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
                 const testX = startX + dir.dx;
                 const testY = startY + dir.dy;
                 if (isPositionValid(testX, testY, obstacles, agentRadius)) {
-                    actualStartX = testX;
-                    actualStartY = testY;
-                    found = true;
-                    break;
+                    // Calculate distance to goal
+                    const distToGoal = heuristic(testX, testY);
+                    if (distToGoal < bestDist) {
+                        bestX = testX;
+                        bestY = testY;
+                        bestDist = distToGoal;
+                        found = true;
+                    }
                 }
             }
-            if (found) break;
         }
-        // If no valid position found nearby, return empty path
-        if (!found) {
+        
+        if (found) {
+            actualStartX = bestX;
+            actualStartY = bestY;
+            
+            // If the adjusted start position has line of sight to goal, return direct path
+            if (hasLineOfSight(actualStartX, actualStartY, goalX, goalY, obstacles, agentRadius)) {
+                // Return simple path: adjusted start -> goal
+                return [{ x: actualStartX, y: actualStartY }, { x: goalX, y: goalY }];
+            }
+        } else {
+            // If no valid position found nearby, return empty path
             return [];
+        }
+    }
+    
+    // If starting from original position with line of sight to goal, return direct path
+    if (actualStartX === startX && actualStartY === startY) {
+        if (hasLineOfSight(actualStartX, actualStartY, goalX, goalY, obstacles, agentRadius)) {
+            return [{ x: goalX, y: goalY }];
         }
     }
     
