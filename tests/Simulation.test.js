@@ -532,7 +532,7 @@ describe('Simulation', () => {
             simulation.draw();
             
             simulation.agents.forEach(agent => {
-                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false);
+                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false, false, false);
             });
         });
         
@@ -547,7 +547,78 @@ describe('Simulation', () => {
             
             simulation.draw();
             
-            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true);
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false, false);
+        });
+        
+        it('should pass isSelected=true to selected agent draw', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn two agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Select the first agent
+            simulation.setSelectedAgent(simulation.agents[0]);
+            
+            // Mock both agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isSelected=true
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true, false);
+            // Second agent should be called with isSelected=false
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
+        });
+        
+        it('should pass isHovered=true to hovered agent draw', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn two agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Hover over the first agent
+            simulation.setHoveredAgent(simulation.agents[0]);
+            
+            // Mock both agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isHovered=true
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, false, true);
+            // Second agent should be called with isHovered=false
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
+        });
+        
+        it('should pass both isSelected and isHovered correctly', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn three agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Select the first agent and hover over the second
+            simulation.setSelectedAgent(simulation.agents[0]);
+            simulation.setHoveredAgent(simulation.agents[1]);
+            
+            // Mock all agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            simulation.agents[2].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isSelected=true, isHovered=false
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true, false);
+            // Second agent should be called with isSelected=false, isHovered=true
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, true);
+            // Third agent should be called with both false
+            expect(simulation.agents[2].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
         });
         
         it('should clear canvas before drawing agents', () => {
@@ -634,6 +705,175 @@ describe('Simulation', () => {
             simulation.run();
             
             expect(callCount).toBe(3);
+        });
+    });
+    
+    describe('pause functionality', () => {
+        it('should initialize with paused set to false', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.paused).toBe(false);
+            expect(simulation.isPaused()).toBe(false);
+        });
+        
+        it('should pause the simulation', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.setPaused(true);
+            
+            expect(simulation.isPaused()).toBe(true);
+            expect(simulation.tickRate).toBe(0);
+        });
+        
+        it('should resume the simulation', () => {
+            const simulation = new Simulation(canvas);
+            const originalTickRate = simulation.tickRate;
+            
+            simulation.setPaused(true);
+            simulation.setPaused(false);
+            
+            expect(simulation.isPaused()).toBe(false);
+            expect(simulation.tickRate).toBe(originalTickRate);
+        });
+        
+        it('should store desired tick rate when paused', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setTickRate(2.5);
+            
+            simulation.setPaused(true);
+            
+            expect(simulation.desiredTickRate).toBe(2.5);
+            expect(simulation.tickRate).toBe(0);
+        });
+        
+        it('should apply desired tick rate when resumed', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setTickRate(3.0);
+            simulation.setPaused(true);
+            
+            simulation.setPaused(false);
+            
+            expect(simulation.tickRate).toBe(3.0);
+        });
+        
+        it('should not apply tick rate immediately when paused', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setPaused(true);
+            
+            simulation.setTickRate(5.0);
+            
+            expect(simulation.tickRate).toBe(0);
+            expect(simulation.desiredTickRate).toBe(5.0);
+        });
+        
+        it('should apply tick rate immediately when not paused', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.setTickRate(2.0);
+            
+            expect(simulation.tickRate).toBe(2.0);
+            expect(simulation.desiredTickRate).toBe(2.0);
+        });
+    });
+    
+    describe('getAgentAtPosition', () => {
+        it('should return agent when position is within agent radius', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(102, 202);
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return null when position is outside all agent radii', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(200, 200);
+            
+            expect(foundAgent).toBeNull();
+        });
+        
+        it('should return null when there are no agents', () => {
+            const simulation = new Simulation(canvas);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBeNull();
+        });
+        
+        it('should return agent when position is exactly on agent center', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return agent when position is exactly on agent radius edge', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(105, 200); // radius = 5
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return top-most agent when multiple agents overlap', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(100, 200);
+            simulation.agents.push(agent1);
+            simulation.agents.push(agent2);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBe(agent2); // Last agent added is top-most
+        });
+    });
+    
+    describe('setSelectedAgent and getSelectedAgent', () => {
+        it('should set and get selected agent', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.setSelectedAgent(agent);
+            
+            expect(simulation.getSelectedAgent()).toBe(agent);
+        });
+        
+        it('should return null when no agent is selected', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.getSelectedAgent()).toBeNull();
+        });
+        
+        it('should allow clearing selected agent by setting to null', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.setSelectedAgent(agent);
+            simulation.setSelectedAgent(null);
+            
+            expect(simulation.getSelectedAgent()).toBeNull();
+        });
+        
+        it('should allow switching between different selected agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(300, 400);
+            
+            simulation.setSelectedAgent(agent1);
+            expect(simulation.getSelectedAgent()).toBe(agent1);
+            
+            simulation.setSelectedAgent(agent2);
+            expect(simulation.getSelectedAgent()).toBe(agent2);
         });
     });
 });

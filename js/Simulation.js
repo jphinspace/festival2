@@ -16,6 +16,10 @@ export class Simulation {
         this.lastTime = performance.now();
         this.running = true;
         this.showDestinations = false; // Toggle for destination lines
+        this.paused = false; // Pause state
+        this.desiredTickRate = 1.0; // Store the desired tick rate when paused
+        this.selectedAgent = null; // Currently selected agent
+        this.hoveredAgent = null; // Currently hovered agent
         
         this.init();
     }
@@ -73,12 +77,65 @@ export class Simulation {
     }
     
     setTickRate(rate) {
-        this.tickRate = rate;
+        if (this.paused) {
+            // Store the desired rate but don't apply it
+            this.desiredTickRate = rate;
+        } else {
+            this.tickRate = rate;
+            this.desiredTickRate = rate;
+        }
+    }
+    
+    setPaused(paused) {
+        this.paused = paused;
+        if (paused) {
+            // Store current tick rate and set to 0
+            this.desiredTickRate = this.tickRate;
+            this.tickRate = 0;
+        } else {
+            // Restore the desired tick rate
+            this.tickRate = this.desiredTickRate;
+        }
+    }
+    
+    isPaused() {
+        return this.paused;
     }
     
     toggleDestinations() {
         this.showDestinations = !this.showDestinations;
         return this.showDestinations;
+    }
+    
+    getAgentAtPosition(x, y) {
+        // Check agents in reverse order (top-most rendered first)
+        for (let i = this.agents.length - 1; i >= 0; i--) {
+            const agent = this.agents[i];
+            const dx = x - agent.x;
+            const dy = y - agent.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance <= agent.radius) {
+                return agent;
+            }
+        }
+        return null;
+    }
+    
+    setSelectedAgent(agent) {
+        this.selectedAgent = agent;
+    }
+    
+    getSelectedAgent() {
+        return this.selectedAgent;
+    }
+    
+    setHoveredAgent(agent) {
+        this.hoveredAgent = agent;
+    }
+    
+    getHoveredAgent() {
+        return this.hoveredAgent;
     }
     
     getSpawnLocation() {
@@ -186,7 +243,9 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            agent.draw(this.ctx, this.showDestinations);
+            const isSelected = (agent === this.selectedAgent);
+            const isHovered = (agent === this.hoveredAgent);
+            agent.draw(this.ctx, this.showDestinations, isSelected, isHovered);
         }
     }
     

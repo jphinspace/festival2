@@ -117,9 +117,9 @@ export class Agent {
         this.destinationY = Math.max(0, Math.min(canvasHeight, this.destinationY));
     }
     
-    draw(ctx, showDestination = false) {
-        // Draw destination line if enabled
-        if (showDestination) {
+    draw(ctx, showDestination = false, isSelected = false, isHovered = false) {
+        // Draw destination line if enabled OR if agent is selected/hovered
+        if (showDestination || isSelected || isHovered) {
             // Check line of sight to determine line color
             const losIsClear = hasLineOfSight(
                 this.x, 
@@ -186,5 +186,36 @@ export class Agent {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Draw white outline if selected
+        if (isSelected) {
+            ctx.strokeStyle = '#FFFFFF'; // White
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
+    
+    getSpeed() {
+        return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    }
+    
+    getDirection() {
+        // Calculate direction in degrees (0 = north, 90 = east, 180 = south, 270 = west)
+        // In canvas: positive X = right (east), positive Y = down (south)
+        // atan2(y, x) gives angle from positive X axis, counter-clockwise
+        // We need compass bearing where 0 = north (negative Y direction)
+        let angleRad = Math.atan2(this.vx, -this.vy); // Swap and negate y for compass
+        let angleDeg = angleRad * (180 / Math.PI);
+        // Normalize to 0-360
+        let compassDeg = angleDeg;
+        while (compassDeg < 0) compassDeg += 360;
+        while (compassDeg >= 360) compassDeg -= 360;
+        return Math.round(compassDeg);
+    }
+    
+    getPathfindingMode() {
+        return this.pathState.mode || 'bug';
     }
 }

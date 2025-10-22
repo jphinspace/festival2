@@ -574,10 +574,31 @@ describe('Agent', () => {
             // Should have called stroke multiple times (left edge, right edge, centerline)
             expect(mockCtx.stroke).toHaveBeenCalledTimes(3);
             
-            // Should have drawn edge lines with semi-transparent color
-            const calls = mockCtx.strokeStyle;
-            // The edge lines use rgba with 0.3 alpha, centerline uses solid color
+            // Should have drawn edge lines
+            // The edge lines use rgba with 1.0 alpha, centerline uses solid color
             expect(mockCtx.beginPath).toHaveBeenCalledTimes(4); // 3 lines + 1 agent circle
+        });
+        
+        it('should draw white outline when isSelected is true', () => {
+            agent.draw(mockCtx, false, true);
+            
+            expect(mockCtx.strokeStyle).toBe('#FFFFFF');
+            expect(mockCtx.lineWidth).toBe(2);
+            // arc should be called twice: once for fill, once for stroke
+            expect(mockCtx.arc).toHaveBeenCalledTimes(2);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should not draw outline when isSelected is false', () => {
+            // Reset mock to track only this call
+            mockCtx.stroke = jest.fn();
+            mockCtx.arc = jest.fn();
+            
+            agent.draw(mockCtx, false, false);
+            
+            // arc should only be called once for fill (not for stroke)
+            expect(mockCtx.arc).toHaveBeenCalledTimes(1);
+            expect(mockCtx.stroke).not.toHaveBeenCalled();
         });
         
         it('should call methods in correct order', () => {
@@ -589,6 +610,181 @@ describe('Agent', () => {
             agent.draw(mockCtx);
             
             expect(calls).toEqual(['beginPath', 'arc', 'fill']);
+        });
+        
+        it('should draw destination line when isHovered is true', () => {
+            agent.draw(mockCtx, false, false, true);
+            
+            // Should draw teal color for clear line of sight (no obstacles)
+            expect(mockCtx.strokeStyle).toBe('#00CED1');
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should draw destination line when isSelected is true even if showDestination is false', () => {
+            agent.draw(mockCtx, false, true, false);
+            
+            // Verify destination line drawing methods were called
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            // stroke should be called 4 times: 3 for destination lines (left, right, center), 1 for white outline
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should draw destination line when both isSelected and isHovered are true', () => {
+            agent.draw(mockCtx, false, true, true);
+            
+            // Verify destination line drawing methods were called
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            // stroke should be called: 3 for destination lines + 1 for white outline
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should not draw destination line when showDestination, isSelected, and isHovered are all false', () => {
+            mockCtx.stroke = jest.fn();
+            mockCtx.moveTo = jest.fn();
+            mockCtx.lineTo = jest.fn();
+            
+            agent.draw(mockCtx, false, false, false);
+            
+            expect(mockCtx.moveTo).not.toHaveBeenCalled();
+            expect(mockCtx.lineTo).not.toHaveBeenCalled();
+        });
+    });
+    
+    describe('getSpeed', () => {
+        it('should return the magnitude of velocity', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 30;
+            agent.vy = 40;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(50); // sqrt(30^2 + 40^2) = 50
+        });
+        
+        it('should return 0 when agent is not moving', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = 0;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(0);
+        });
+        
+        it('should handle negative velocities', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -30;
+            agent.vy = -40;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(50);
+        });
+    });
+    
+    describe('getDirection', () => {
+        it('should return 0 degrees for north direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = -10; // Moving north (negative y)
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(0);
+        });
+        
+        it('should return 90 degrees for east direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10; // Moving east (positive x)
+            agent.vy = 0;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(90);
+        });
+        
+        it('should return 180 degrees for south direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = 10; // Moving south (positive y)
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(180);
+        });
+        
+        it('should return 270 degrees for west direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -10; // Moving west (negative x)
+            agent.vy = 0;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(270);
+        });
+        
+        it('should handle diagonal directions (northeast)', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10;
+            agent.vy = -10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(45);
+        });
+        
+        it('should handle diagonal directions (southeast)', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10;
+            agent.vy = 10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(135);
+        });
+        
+        it('should normalize angles to 0-360 range', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -10;
+            agent.vy = -10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBeGreaterThanOrEqual(0);
+            expect(direction).toBeLessThan(360);
+        });
+    });
+    
+    describe('getPathfindingMode', () => {
+        it('should return "bug" when pathState.mode is not set', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = {};
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('bug');
+        });
+        
+        it('should return "bug" when pathState.mode is "bug"', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = { mode: 'bug' };
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('bug');
+        });
+        
+        it('should return "astar" when pathState.mode is "astar"', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = { mode: 'astar' };
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('astar');
         });
     });
 });
