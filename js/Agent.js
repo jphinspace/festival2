@@ -133,4 +133,28 @@ export class Agent {
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
     }
+    
+    getSpeed() {
+        return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+    }
+    
+    getDirection() {
+        // Calculate direction in degrees (0 = north, 90 = east, 180 = south, 270 = west)
+        // atan2 returns angle where 0 is east, positive is counter-clockwise
+        // We need to convert to compass bearing: 0 = north
+        let angleRad = Math.atan2(this.vy, this.vx);
+        let angleDeg = angleRad * (180 / Math.PI);
+        // Convert from standard math angle to compass bearing
+        // Math: 0=E, 90=N, 180=W, 270=S
+        // Compass: 0=N, 90=E, 180=S, 270=W
+        let compassDeg = 90 - angleDeg;
+        // Normalize to 0-360
+        while (compassDeg < 0) compassDeg += 360;
+        while (compassDeg >= 360) compassDeg -= 360;
+        return Math.round(compassDeg);
+    }
+    
+    getPathfindingMode() {
+        return this.pathState.mode || 'bug';
+    }
 }
