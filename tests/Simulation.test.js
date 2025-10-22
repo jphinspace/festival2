@@ -777,64 +777,65 @@ describe('Simulation', () => {
     });
     
     describe('getAgentAtPosition', () => {
-        it('should return agent when position is within agent radius', () => {
+        it('should return array with agent when position is within agent radius', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(102, 202);
+            const foundAgents = simulation.getAgentAtPosition(102, 202);
             
-            expect(foundAgent).toBe(agent);
+            expect(foundAgents).toEqual([agent]);
+            expect(foundAgents.length).toBe(1);
         });
         
-        it('should return undefined when position is outside all agent radii', () => {
+        it('should return empty array when position is outside all agent radii', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(200, 200);
+            const foundAgents = simulation.getAgentAtPosition(200, 200);
             
-            expect(foundAgent).toBeUndefined();
+            expect(foundAgents).toEqual([]);
         });
         
-        it('should return undefined when there are no agents', () => {
+        it('should return empty array when there are no agents', () => {
             const simulation = new Simulation(canvas);
             
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBeUndefined();
+            expect(foundAgents).toEqual([]);
         });
         
-        it('should return agent when position is exactly on agent center', () => {
-            const simulation = new Simulation(canvas);
-            const agent = new Agent(100, 200);
-            simulation.agents.push(agent);
-            
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
-            
-            expect(foundAgent).toBe(agent);
-        });
-        
-        it('should return agent when position is exactly on agent radius edge', () => {
+        it('should return array with agent when position is exactly on agent center', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(105, 200); // radius = 5
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBe(agent);
+            expect(foundAgents).toEqual([agent]);
         });
         
-        it('should return top-most agent when multiple agents overlap', () => {
+        it('should return array with agent when position is exactly on agent radius edge', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgents = simulation.getAgentAtPosition(105, 200); // radius = 5
+            
+            expect(foundAgents).toEqual([agent]);
+        });
+        
+        it('should return array with top-most agent when multiple agents overlap', () => {
             const simulation = new Simulation(canvas);
             const agent1 = new Agent(100, 200);
             const agent2 = new Agent(100, 200);
             simulation.agents.push(agent1);
             simulation.agents.push(agent2);
             
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBe(agent2); // Last agent added is top-most
+            expect(foundAgents).toEqual([agent2]); // Last agent added is top-most
         });
     });
     

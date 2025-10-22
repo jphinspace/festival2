@@ -61,9 +61,10 @@ canvas.addEventListener('mousemove', (e) => {
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     
-    const agent = simulation.getAgentAtPosition(x, y);
+    const agents = simulation.getAgentAtPosition(x, y);
     
-    if (agent) {
+    if (agents.length > 0) {
+        const agent = agents[0];
         currentHoveredAgents = [agent];
         simulation.addHoveredAgent(agent);
         updateTooltip(agent);
@@ -92,9 +93,10 @@ canvas.addEventListener('click', (e) => {
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     
-    const agent = simulation.getAgentAtPosition(x, y);
+    const agents = simulation.getAgentAtPosition(x, y);
     
-    if (agent) {
+    if (agents.length > 0) {
+        const agent = agents[0];
         // Select the clicked agent
         selectedAgents = [agent];
         simulation.clearSelectedAgents();

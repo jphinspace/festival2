@@ -116,10 +116,10 @@ export class Simulation {
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance <= agent.radius) {
-                return agent;
+                return [agent];
             }
         }
-        return undefined;
+        return [];
     }
     
     addSelectedAgent(agent) {
