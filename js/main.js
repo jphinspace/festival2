@@ -50,6 +50,7 @@ let selectedAgent = null;
 canvas.addEventListener('mousemove', (e) => {
     // Disable hover tooltip when an agent is selected
     if (selectedAgent) {
+        simulation.setHoveredAgent(null);
         return;
     }
     
@@ -64,10 +65,12 @@ canvas.addEventListener('mousemove', (e) => {
     
     if (agent) {
         currentHoveredAgent = agent;
+        simulation.setHoveredAgent(agent);
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
         currentHoveredAgent = null;
+        simulation.setHoveredAgent(null);
         tooltip.classList.remove('visible');
     }
 });
@@ -76,6 +79,7 @@ canvas.addEventListener('mouseleave', () => {
     // Don't hide tooltip if an agent is selected
     if (!selectedAgent) {
         currentHoveredAgent = null;
+        simulation.setHoveredAgent(null);
         tooltip.classList.remove('visible');
     }
 });
@@ -94,12 +98,14 @@ canvas.addEventListener('click', (e) => {
         // Select the clicked agent
         selectedAgent = agent;
         simulation.setSelectedAgent(agent);
+        simulation.setHoveredAgent(null);
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
         // Clear selection when clicking empty space
         selectedAgent = null;
         simulation.setSelectedAgent(null);
+        simulation.setHoveredAgent(null);
         currentHoveredAgent = null;
         tooltip.classList.remove('visible');
     }

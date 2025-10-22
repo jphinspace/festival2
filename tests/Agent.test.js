@@ -577,6 +577,46 @@ describe('Agent', () => {
             
             expect(calls).toEqual(['beginPath', 'arc', 'fill']);
         });
+        
+        it('should draw destination line when isHovered is true', () => {
+            agent.draw(mockCtx, false, false, true);
+            
+            expect(mockCtx.strokeStyle).toBe('#00FF00');
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should draw destination line when isSelected is true even if showDestination is false', () => {
+            agent.draw(mockCtx, false, true, false);
+            
+            // Verify destination line drawing methods were called
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            // stroke should be called twice: once for destination line, once for white outline
+            expect(mockCtx.stroke).toHaveBeenCalledTimes(2);
+        });
+        
+        it('should draw destination line when both isSelected and isHovered are true', () => {
+            agent.draw(mockCtx, false, true, true);
+            
+            // Verify destination line drawing methods were called
+            expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
+            expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
+            // stroke should be called twice: once for destination line, once for white outline
+            expect(mockCtx.stroke).toHaveBeenCalledTimes(2);
+        });
+        
+        it('should not draw destination line when showDestination, isSelected, and isHovered are all false', () => {
+            mockCtx.stroke = jest.fn();
+            mockCtx.moveTo = jest.fn();
+            mockCtx.lineTo = jest.fn();
+            
+            agent.draw(mockCtx, false, false, false);
+            
+            expect(mockCtx.moveTo).not.toHaveBeenCalled();
+            expect(mockCtx.lineTo).not.toHaveBeenCalled();
+        });
     });
     
     describe('getSpeed', () => {

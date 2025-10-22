@@ -116,9 +116,9 @@ export class Agent {
         this.destinationY = Math.max(0, Math.min(canvasHeight, this.destinationY));
     }
     
-    draw(ctx, showDestination = false, isSelected = false) {
-        // Draw destination line if enabled
-        if (showDestination) {
+    draw(ctx, showDestination = false, isSelected = false, isHovered = false) {
+        // Draw destination line if enabled OR if agent is selected/hovered
+        if (showDestination || isSelected || isHovered) {
             ctx.strokeStyle = '#00FF00'; // Bright green
             ctx.lineWidth = 1;
             ctx.beginPath();

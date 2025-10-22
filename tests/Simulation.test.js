@@ -532,7 +532,7 @@ describe('Simulation', () => {
             simulation.draw();
             
             simulation.agents.forEach(agent => {
-                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false, false);
+                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false, false, false);
             });
         });
         
@@ -547,7 +547,7 @@ describe('Simulation', () => {
             
             simulation.draw();
             
-            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false);
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false, false);
         });
         
         it('should pass isSelected=true to selected agent draw', () => {
@@ -567,9 +567,58 @@ describe('Simulation', () => {
             simulation.draw();
             
             // First agent should be called with isSelected=true
-            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true);
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true, false);
             // Second agent should be called with isSelected=false
-            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false);
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
+        });
+        
+        it('should pass isHovered=true to hovered agent draw', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn two agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Hover over the first agent
+            simulation.setHoveredAgent(simulation.agents[0]);
+            
+            // Mock both agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isHovered=true
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, false, true);
+            // Second agent should be called with isHovered=false
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
+        });
+        
+        it('should pass both isSelected and isHovered correctly', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn three agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Select the first agent and hover over the second
+            simulation.setSelectedAgent(simulation.agents[0]);
+            simulation.setHoveredAgent(simulation.agents[1]);
+            
+            // Mock all agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            simulation.agents[2].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isSelected=true, isHovered=false
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true, false);
+            // Second agent should be called with isSelected=false, isHovered=true
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false, true);
+            // Third agent should be called with both false
+            expect(simulation.agents[2].draw).toHaveBeenCalledWith(mockCtx, false, false, false);
         });
         
         it('should clear canvas before drawing agents', () => {
