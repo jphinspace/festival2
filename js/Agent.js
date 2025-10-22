@@ -104,8 +104,22 @@ export class Agent {
         // Update obstacles reference
         this.obstacles = obstacles;
         
+        // Store old position in case we need to revert due to collision
+        const oldX = this.x;
+        const oldY = this.y;
+        
         // Delegate to current state
         this.state.update(this, deltaTime, canvasWidth, canvasHeight, obstacles);
+        
+        // Check for collision with obstacles after movement
+        for (const obstacle of obstacles) {
+            if (obstacle.collidesWith(this.x, this.y, this.radius)) {
+                // Collision detected - revert to old position
+                this.x = oldX;
+                this.y = oldY;
+                break;
+            }
+        }
         
         // Clamp position to canvas bounds
         this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
