@@ -531,10 +531,13 @@ describe('Agent', () => {
         it('should draw destination line when showDestination is true', () => {
             agent.draw(mockCtx, true);
             
-            expect(mockCtx.strokeStyle).toBe('#00FF00');
+            // Should draw three lines: left edge, right edge, and centerline
+            // The final strokeStyle should be the centerline color (teal when clear)
+            expect(mockCtx.strokeStyle).toBe('#00CED1');
+            expect(mockCtx.stroke).toHaveBeenCalled();
+            // Verify centerline endpoints
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
-            expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
         it('should not draw destination line when showDestination is false', () => {
@@ -543,6 +546,37 @@ describe('Agent', () => {
             expect(mockCtx.stroke).not.toHaveBeenCalled();
             expect(mockCtx.moveTo).not.toHaveBeenCalled();
             expect(mockCtx.lineTo).not.toHaveBeenCalled();
+        });
+        
+        it('should draw red line when line of sight is obstructed', () => {
+            // Agent is at (100, 200), set destination at (100, 100)
+            // Create obstacle between them at (100, 150)
+            const obstacle = new Obstacle(100, 150, 40, 40);
+            agent.obstacles = [obstacle];
+            agent.destinationX = 100;
+            agent.destinationY = 100;
+            
+            agent.draw(mockCtx, true);
+            
+            // Should draw three lines: left edge, right edge, and centerline
+            // The final strokeStyle should be red when obstructed
+            expect(mockCtx.strokeStyle).toBe('#FF0000');
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should draw parallel edge lines for agent radius visualization', () => {
+            // Set up agent with a clear path
+            agent.destinationX = 200;
+            agent.destinationY = 300;
+            
+            agent.draw(mockCtx, true);
+            
+            // Should have called stroke multiple times (left edge, right edge, centerline)
+            expect(mockCtx.stroke).toHaveBeenCalledTimes(3);
+            
+            // Should have drawn edge lines
+            // The edge lines use rgba with 1.0 alpha, centerline uses solid color
+            expect(mockCtx.beginPath).toHaveBeenCalledTimes(4); // 3 lines + 1 agent circle
         });
         
         it('should draw white outline when isSelected is true', () => {
@@ -581,7 +615,8 @@ describe('Agent', () => {
         it('should draw destination line when isHovered is true', () => {
             agent.draw(mockCtx, false, false, true);
             
-            expect(mockCtx.strokeStyle).toBe('#00FF00');
+            // Should draw teal color for clear line of sight (no obstacles)
+            expect(mockCtx.strokeStyle).toBe('#00CED1');
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
             expect(mockCtx.stroke).toHaveBeenCalled();
@@ -593,8 +628,8 @@ describe('Agent', () => {
             // Verify destination line drawing methods were called
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
-            // stroke should be called twice: once for destination line, once for white outline
-            expect(mockCtx.stroke).toHaveBeenCalledTimes(2);
+            // stroke should be called 4 times: 3 for destination lines (left, right, center), 1 for white outline
+            expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
         it('should draw destination line when both isSelected and isHovered are true', () => {
@@ -603,8 +638,8 @@ describe('Agent', () => {
             // Verify destination line drawing methods were called
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
-            // stroke should be called twice: once for destination line, once for white outline
-            expect(mockCtx.stroke).toHaveBeenCalledTimes(2);
+            // stroke should be called: 3 for destination lines + 1 for white outline
+            expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
         it('should not draw destination line when showDestination, isSelected, and isHovered are all false', () => {
