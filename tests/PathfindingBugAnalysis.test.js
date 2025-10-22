@@ -95,7 +95,7 @@ describe('Pathfinding Bug Analysis', () => {
             expect(hasLOS).toBe(false);
         });
         
-        it('should trigger ASTAR mode when obstacle blocks path (BUG: fails due to empty path fallback)', () => {
+        it('should trigger ASTAR mode when obstacle blocks path (FIXED: now uses line-of-sight optimization)', () => {
             const canvasHeight = 600;
             const canvasWidth = 800;
             const wallHeight = canvasHeight / 5;
@@ -130,20 +130,19 @@ describe('Pathfinding Bug Analysis', () => {
             // Should be in ASTAR mode because obstacle blocks
             expect(['bug', 'astar']).toContain(agentPathState.mode);
             
-            // This test documents the BUG:
-            // When obstacle blocks path, should transition to ASTAR
-            // But if findBoundedPath returns empty array, immediately falls back to BUG
+            // FIXED: With line-of-sight optimization, A* can now find a path
+            // by stopping early when it reaches a point with LOS to destination
             const hasLOS = hasLineOfSight(currentX, currentY, goalX, goalY, obstacles, agentRadius);
             console.log('Line of sight blocked:', !hasLOS);
             
             if (!hasLOS) {
-                // BUG: Should be in ASTAR mode, but is in BUG mode due to empty path fallback
-                console.log('BUG CONFIRMED: Mode is', agentPathState.mode, 'but should be astar');
-                console.log('Reason: findBoundedPath returned empty array, triggering fallback to BUG');
+                // Fixed: Should be in ASTAR mode with valid path
+                console.log('FIXED: Mode is', agentPathState.mode, 'with path length', agentPathState.path.length);
+                console.log('Reason: A* stops early when reaching point with LOS to destination');
                 
-                // Document the bug: mode is BUG when it should be ASTAR
-                expect(agentPathState.mode).toBe('bug'); // Current (buggy) behavior
-                // expect(agentPathState.mode).toBe('astar'); // Expected (correct) behavior
+                // With the fix, mode should be ASTAR with a valid path
+                expect(agentPathState.mode).toBe('astar');
+                expect(agentPathState.path.length).toBeGreaterThan(0);
             }
         });
     });
@@ -479,7 +478,7 @@ describe('Pathfinding Bug Analysis', () => {
             expect(hasLOS).toBe(false);
         });
         
-        it('should reproduce exact scenario from screenshots', () => {
+        it('should reproduce exact scenario from screenshots (FIXED with LOS optimization)', () => {
             // Exact simulation setup
             const canvasHeight = 600;
             const canvasWidth = 800;
@@ -501,7 +500,7 @@ describe('Pathfinding Bug Analysis', () => {
             const destY = 78;
             const agentRadius = 5;
             
-            console.log('\n=== EXACT BUG SCENARIO REPRODUCTION ===');
+            console.log('\n=== EXACT BUG SCENARIO - NOW FIXED ===');
             console.log('Canvas:', canvasWidth, 'x', canvasHeight);
             console.log('Left wall bounds:', leftWall.getBounds());
             console.log('Right wall bounds:', rightWall.getBounds());
@@ -537,18 +536,15 @@ describe('Pathfinding Bug Analysis', () => {
             // Line of sight should be BLOCKED by walls
             expect(hasLOS).toBe(false);
             
-            // The issue: if findBoundedPath returns empty array, mode switches back to BUG
-            // This is the ROOT CAUSE of the bug
-            console.log('ROOT CAUSE: findBoundedPath returns empty array, causing immediate switch back to BUG mode');
+            // FIXED: With line-of-sight optimization, A* can now find paths to distant destinations
+            // by stopping early when reaching a point with LOS to destination
+            console.log('FIXED: A* uses line-of-sight optimization to find path efficiently');
             
-            // If line of sight is blocked, should be in ASTAR mode
-            // BUT if path is empty, it switches back to BUG (this is the bug!)
-            if (!hasLOS && agentPathState.path && agentPathState.path.length > 0) {
+            // With the fix, should be in ASTAR mode with valid path
+            if (!hasLOS) {
                 expect(agentPathState.mode).toBe('astar');
-            } else if (!hasLOS && (!agentPathState.path || agentPathState.path.length === 0)) {
-                // This is the bug - empty path causes fallback to BUG mode
-                console.log('BUG CONFIRMED: Empty path from findBoundedPath causes fallback to BUG mode');
-                expect(agentPathState.mode).toBe('bug');
+                expect(agentPathState.path.length).toBeGreaterThan(0);
+                console.log('SUCCESS: Path found using LOS optimization, agent will navigate correctly');
             }
         });
     });

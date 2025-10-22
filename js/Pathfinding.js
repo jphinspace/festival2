@@ -225,9 +225,9 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
         expansions++;
         closedSet.add(current.key);
         
-        // Check if we reached the goal (within grid cell) AND have clear line of sight
-        const distToGoal = calculateDistance(current.x, current.y, goalX, goalY);
-        if (distToGoal < GRID_SIZE * 2 && hasLineOfSight(current.x, current.y, goalX, goalY, obstacles, agentRadius)) {
+        // Check if we have clear line of sight to goal (at any distance)
+        // If so, we can stop A* here and let BUG mode handle the rest
+        if (hasLineOfSight(current.x, current.y, goalX, goalY, obstacles, agentRadius)) {
             // Reconstruct path
             return reconstructPath(current, cameFrom, goalX, goalY);
         }
