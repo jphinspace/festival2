@@ -550,6 +550,28 @@ describe('Simulation', () => {
             expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false);
         });
         
+        it('should pass isSelected=true to selected agent draw', () => {
+            const simulation = new Simulation(canvas);
+            
+            // Spawn two agents
+            simulation.spawnFanAgent();
+            simulation.spawnFanAgent();
+            
+            // Select the first agent
+            simulation.setSelectedAgent(simulation.agents[0]);
+            
+            // Mock both agent draw methods
+            simulation.agents[0].draw = jest.fn();
+            simulation.agents[1].draw = jest.fn();
+            
+            simulation.draw();
+            
+            // First agent should be called with isSelected=true
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, false, true);
+            // Second agent should be called with isSelected=false
+            expect(simulation.agents[1].draw).toHaveBeenCalledWith(mockCtx, false, false);
+        });
+        
         it('should clear canvas before drawing agents', () => {
             const simulation = new Simulation(canvas);
             const calls = [];
@@ -764,6 +786,45 @@ describe('Simulation', () => {
             const foundAgent = simulation.getAgentAtPosition(100, 200);
             
             expect(foundAgent).toBe(agent2); // Last agent added is top-most
+        });
+    });
+    
+    describe('setSelectedAgent and getSelectedAgent', () => {
+        it('should set and get selected agent', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.setSelectedAgent(agent);
+            
+            expect(simulation.getSelectedAgent()).toBe(agent);
+        });
+        
+        it('should return null when no agent is selected', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.getSelectedAgent()).toBeNull();
+        });
+        
+        it('should allow clearing selected agent by setting to null', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.setSelectedAgent(agent);
+            simulation.setSelectedAgent(null);
+            
+            expect(simulation.getSelectedAgent()).toBeNull();
+        });
+        
+        it('should allow switching between different selected agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(300, 400);
+            
+            simulation.setSelectedAgent(agent1);
+            expect(simulation.getSelectedAgent()).toBe(agent1);
+            
+            simulation.setSelectedAgent(agent2);
+            expect(simulation.getSelectedAgent()).toBe(agent2);
         });
     });
 });
