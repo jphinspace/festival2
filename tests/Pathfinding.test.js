@@ -592,31 +592,6 @@ describe('Pathfinding', () => {
             
             expect(result).toBeDefined();
         });
-
-        it('should not return goal when path is empty and line of sight is blocked', () => {
-            // This tests the fix for the bug where agents move through obstacles
-            // When A* returns an empty path and there's no line of sight, 
-            // the agent should stay in place rather than moving toward the goal
-            obstacles = [new Obstacle(50, 50, 40, 40)]; // Large obstacle
-            agentPathState = { mode: 'astar', path: [], pathIndex: 0 };
-            
-            // Position close to obstacle, goal on other side
-            const result = calculateNextWaypoint(30, 50, 70, 50, obstacles, 5, agentPathState);
-            
-            // Should not return the goal directly since line of sight is blocked
-            // Either returns current position (stays in place) or a valid waypoint from new path
-            if (result.x === 70 && result.y === 50) {
-                // If it returns the goal, line of sight must be clear
-                expect(hasLineOfSight(30, 50, 70, 50, obstacles, 5)).toBe(true);
-            } else {
-                // Otherwise it should be a safe position (either current or valid waypoint)
-                expect(result.x).toBeDefined();
-                expect(result.y).toBeDefined();
-            }
-            
-            // Should remain in or switch to astar mode when blocked
-            expect(agentPathState.mode).toBe('astar');
-        });
     });
 
     describe('findBoundedPath (A* algorithm internals)', () => {

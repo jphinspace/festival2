@@ -149,24 +149,12 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
     }
     
     // A* mode: follow computed path (also handles fall-through from bug mode)
-    // If we've reached the end of the path, check if we can switch back to bug mode
+    // If we've reached the end of the path, switch back to bug mode
     if (agentPathState.path.length === 0 || agentPathState.pathIndex >= agentPathState.path.length) {
-        // Only switch back to bug mode if we have clear line of sight to goal
-        if (hasLineOfSight(currentX, currentY, goalX, goalY, obstacles, agentRadius)) {
-            agentPathState.mode = 'bug';
-            agentPathState.path = [];
-            agentPathState.pathIndex = 0;
-            return { x: goalX, y: goalY, mode: 'bug' };
-        }
-        // No line of sight - need to recompute path
-        agentPathState.path = findBoundedPath(currentX, currentY, goalX, goalY, obstacles, agentRadius);
+        agentPathState.mode = 'bug';
+        agentPathState.path = [];
         agentPathState.pathIndex = 0;
-        
-        // If still no path found, stay at current position (return current position as waypoint)
-        if (agentPathState.path.length === 0) {
-            return { x: currentX, y: currentY, mode: 'astar' };
-        }
-        // Fall through to follow the new path
+        return { x: goalX, y: goalY, mode: 'bug' };
     }
     
     // Check if we have line of sight to goal - if so, switch back to bug mode
