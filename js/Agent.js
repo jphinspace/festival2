@@ -140,15 +140,13 @@ export class Agent {
     
     getDirection() {
         // Calculate direction in degrees (0 = north, 90 = east, 180 = south, 270 = west)
-        // atan2 returns angle where 0 is east, positive is counter-clockwise
-        // We need to convert to compass bearing: 0 = north
-        let angleRad = Math.atan2(this.vy, this.vx);
+        // In canvas: positive X = right (east), positive Y = down (south)
+        // atan2(y, x) gives angle from positive X axis, counter-clockwise
+        // We need compass bearing where 0 = north (negative Y direction)
+        let angleRad = Math.atan2(this.vx, -this.vy); // Swap and negate y for compass
         let angleDeg = angleRad * (180 / Math.PI);
-        // Convert from standard math angle to compass bearing
-        // Math: 0=E, 90=N, 180=W, 270=S
-        // Compass: 0=N, 90=E, 180=S, 270=W
-        let compassDeg = 90 - angleDeg;
         // Normalize to 0-360
+        let compassDeg = angleDeg;
         while (compassDeg < 0) compassDeg += 360;
         while (compassDeg >= 360) compassDeg -= 360;
         return Math.round(compassDeg);

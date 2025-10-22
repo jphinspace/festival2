@@ -636,4 +636,134 @@ describe('Simulation', () => {
             expect(callCount).toBe(3);
         });
     });
+    
+    describe('pause functionality', () => {
+        it('should initialize with paused set to false', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.paused).toBe(false);
+            expect(simulation.isPaused()).toBe(false);
+        });
+        
+        it('should pause the simulation', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.setPaused(true);
+            
+            expect(simulation.isPaused()).toBe(true);
+            expect(simulation.tickRate).toBe(0);
+        });
+        
+        it('should resume the simulation', () => {
+            const simulation = new Simulation(canvas);
+            const originalTickRate = simulation.tickRate;
+            
+            simulation.setPaused(true);
+            simulation.setPaused(false);
+            
+            expect(simulation.isPaused()).toBe(false);
+            expect(simulation.tickRate).toBe(originalTickRate);
+        });
+        
+        it('should store desired tick rate when paused', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setTickRate(2.5);
+            
+            simulation.setPaused(true);
+            
+            expect(simulation.desiredTickRate).toBe(2.5);
+            expect(simulation.tickRate).toBe(0);
+        });
+        
+        it('should apply desired tick rate when resumed', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setTickRate(3.0);
+            simulation.setPaused(true);
+            
+            simulation.setPaused(false);
+            
+            expect(simulation.tickRate).toBe(3.0);
+        });
+        
+        it('should not apply tick rate immediately when paused', () => {
+            const simulation = new Simulation(canvas);
+            simulation.setPaused(true);
+            
+            simulation.setTickRate(5.0);
+            
+            expect(simulation.tickRate).toBe(0);
+            expect(simulation.desiredTickRate).toBe(5.0);
+        });
+        
+        it('should apply tick rate immediately when not paused', () => {
+            const simulation = new Simulation(canvas);
+            
+            simulation.setTickRate(2.0);
+            
+            expect(simulation.tickRate).toBe(2.0);
+            expect(simulation.desiredTickRate).toBe(2.0);
+        });
+    });
+    
+    describe('getAgentAtPosition', () => {
+        it('should return agent when position is within agent radius', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(102, 202);
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return null when position is outside all agent radii', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(200, 200);
+            
+            expect(foundAgent).toBeNull();
+        });
+        
+        it('should return null when there are no agents', () => {
+            const simulation = new Simulation(canvas);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBeNull();
+        });
+        
+        it('should return agent when position is exactly on agent center', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return agent when position is exactly on agent radius edge', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgent = simulation.getAgentAtPosition(105, 200); // radius = 5
+            
+            expect(foundAgent).toBe(agent);
+        });
+        
+        it('should return top-most agent when multiple agents overlap', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(100, 200);
+            simulation.agents.push(agent1);
+            simulation.agents.push(agent2);
+            
+            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            
+            expect(foundAgent).toBe(agent2); // Last agent added is top-most
+        });
+    });
 });
