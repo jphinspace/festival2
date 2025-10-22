@@ -592,6 +592,48 @@ describe('Pathfinding', () => {
             
             expect(result).toBeDefined();
         });
+
+        it('should switch to astar mode when line of sight is blocked in bug mode', () => {
+            // Test the fix: when in BUG mode with blocked line of sight,
+            // agent should switch to ASTAR mode, not continue toward blocked goal
+            obstacles = [new Obstacle(50, 50, 40, 40)]; // Obstacle blocking path
+            agentPathState = { mode: 'bug' };
+            
+            // Agent and goal on opposite sides of obstacle
+            const result = calculateNextWaypoint(30, 50, 70, 50, obstacles, 5, agentPathState);
+            
+            // Should have switched to astar mode
+            expect(agentPathState.mode).toBe('astar');
+            
+            // Should not return the goal directly when path is blocked
+            const returnsGoal = (result.x === 70 && result.y === 50);
+            if (returnsGoal) {
+                // If it returns goal, line of sight must be clear (shouldn't happen with this setup)
+                expect(hasLineOfSight(30, 50, 70, 50, obstacles, 5)).toBe(true);
+            }
+        });
+
+        it('should stay in place if bug mode switches to astar but no path found', () => {
+            // When agent is inside or very close to obstacle and A* can't find path,
+            // agent should stay in place rather than moving toward blocked goal
+            obstacles = [new Obstacle(50, 50, 60, 60)]; // Large obstacle
+            agentPathState = { mode: 'bug' };
+            
+            // Agent inside obstacle
+            const agentX = 50, agentY = 50;
+            const goalX = 100, goalY = 100;
+            
+            const result = calculateNextWaypoint(agentX, agentY, goalX, goalY, obstacles, 5, agentPathState);
+            
+            // Should be in astar mode
+            expect(agentPathState.mode).toBe('astar');
+            
+            // Should stay in place (return current position) not move toward goal
+            if (agentPathState.path.length === 0) {
+                expect(result.x).toBe(agentX);
+                expect(result.y).toBe(agentY);
+            }
+        });
     });
 
     describe('findBoundedPath (A* algorithm internals)', () => {

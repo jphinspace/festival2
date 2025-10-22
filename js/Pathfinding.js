@@ -145,6 +145,11 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         agentPathState.mode = 'astar';
         agentPathState.path = findBoundedPath(currentX, currentY, goalX, goalY, obstacles, agentRadius);
         agentPathState.pathIndex = 0;
+        
+        // If A* couldn't find a path, agent should stay in place rather than moving toward blocked goal
+        if (agentPathState.path.length === 0) {
+            return { x: currentX, y: currentY, mode: 'astar' };
+        }
         // Fall through to astar mode handling
     }
     
