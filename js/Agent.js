@@ -154,8 +154,8 @@ export class Agent {
                 const rightEndX = this.destinationX + perpDx * this.radius;
                 const rightEndY = this.destinationY + perpDy * this.radius;
                 
-                // Draw left and right edge lines (semi-transparent)
-                const edgeColor = losIsClear ? 'rgba(0, 206, 209, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                // Draw left and right edge lines (fully opaque)
+                const edgeColor = losIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
                 ctx.strokeStyle = edgeColor;
                 ctx.lineWidth = 1;
                 
