@@ -545,6 +545,28 @@ describe('Agent', () => {
             expect(mockCtx.lineTo).not.toHaveBeenCalled();
         });
         
+        it('should draw white outline when isSelected is true', () => {
+            agent.draw(mockCtx, false, true);
+            
+            expect(mockCtx.strokeStyle).toBe('#FFFFFF');
+            expect(mockCtx.lineWidth).toBe(2);
+            // arc should be called twice: once for fill, once for stroke
+            expect(mockCtx.arc).toHaveBeenCalledTimes(2);
+            expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should not draw outline when isSelected is false', () => {
+            // Reset mock to track only this call
+            mockCtx.stroke = jest.fn();
+            mockCtx.arc = jest.fn();
+            
+            agent.draw(mockCtx, false, false);
+            
+            // arc should only be called once for fill (not for stroke)
+            expect(mockCtx.arc).toHaveBeenCalledTimes(1);
+            expect(mockCtx.stroke).not.toHaveBeenCalled();
+        });
+        
         it('should call methods in correct order', () => {
             const calls = [];
             mockCtx.beginPath = jest.fn(() => calls.push('beginPath'));

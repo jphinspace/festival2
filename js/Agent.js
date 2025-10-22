@@ -116,7 +116,7 @@ export class Agent {
         this.destinationY = Math.max(0, Math.min(canvasHeight, this.destinationY));
     }
     
-    draw(ctx, showDestination = false) {
+    draw(ctx, showDestination = false, isSelected = false) {
         // Draw destination line if enabled
         if (showDestination) {
             ctx.strokeStyle = '#00FF00'; // Bright green
@@ -132,6 +132,15 @@ export class Agent {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Draw white outline if selected
+        if (isSelected) {
+            ctx.strokeStyle = '#FFFFFF'; // White
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
     }
     
     getSpeed() {

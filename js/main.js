@@ -45,8 +45,14 @@ spawnButton.addEventListener('click', () => {
 // Setup tooltip functionality
 const tooltip = document.getElementById('agentTooltip');
 let currentHoveredAgent = null;
+let selectedAgent = null;
 
 canvas.addEventListener('mousemove', (e) => {
+    // Disable hover tooltip when an agent is selected
+    if (selectedAgent) {
+        return;
+    }
+    
     const rect = canvas.getBoundingClientRect();
     // Account for canvas scaling: convert from display coordinates to canvas coordinates
     const scaleX = canvas.width / rect.width;
@@ -67,8 +73,36 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 canvas.addEventListener('mouseleave', () => {
-    currentHoveredAgent = null;
-    tooltip.classList.remove('visible');
+    // Don't hide tooltip if an agent is selected
+    if (!selectedAgent) {
+        currentHoveredAgent = null;
+        tooltip.classList.remove('visible');
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    // Account for canvas scaling: convert from display coordinates to canvas coordinates
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    const agent = simulation.getAgentAtPosition(x, y);
+    
+    if (agent) {
+        // Select the clicked agent
+        selectedAgent = agent;
+        simulation.setSelectedAgent(agent);
+        updateTooltip(agent);
+        tooltip.classList.add('visible');
+    } else {
+        // Clear selection when clicking empty space
+        selectedAgent = null;
+        simulation.setSelectedAgent(null);
+        currentHoveredAgent = null;
+        tooltip.classList.remove('visible');
+    }
 });
 
 function updateTooltip(agent) {
@@ -89,6 +123,17 @@ function updateTooltip(agent) {
         <div class="tooltip-row"><strong>Pathfinding:</strong> ${pathfindingMode}</div>
     `;
 }
+
+// Update tooltip for selected agent in real-time
+function updateSelectedAgentTooltip() {
+    if (selectedAgent) {
+        updateTooltip(selectedAgent);
+    }
+    requestAnimationFrame(updateSelectedAgentTooltip);
+}
+
+// Start real-time tooltip updates
+updateSelectedAgentTooltip();
 
 // Start simulation
 simulation.run();
