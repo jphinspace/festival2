@@ -531,11 +531,13 @@ describe('Agent', () => {
         it('should draw destination line when showDestination is true', () => {
             agent.draw(mockCtx, true);
             
-            // Teal color when line of sight is clear (no obstacles in test setup)
+            // Should draw three lines: left edge, right edge, and centerline
+            // The final strokeStyle should be the centerline color (teal when clear)
             expect(mockCtx.strokeStyle).toBe('#00CED1');
+            expect(mockCtx.stroke).toHaveBeenCalled();
+            // Verify centerline endpoints
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
-            expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
         it('should not draw destination line when showDestination is false', () => {
@@ -556,9 +558,26 @@ describe('Agent', () => {
             
             agent.draw(mockCtx, true);
             
-            // Red color when line of sight is obstructed
+            // Should draw three lines: left edge, right edge, and centerline
+            // The final strokeStyle should be red when obstructed
             expect(mockCtx.strokeStyle).toBe('#FF0000');
             expect(mockCtx.stroke).toHaveBeenCalled();
+        });
+        
+        it('should draw parallel edge lines for agent radius visualization', () => {
+            // Set up agent with a clear path
+            agent.destinationX = 200;
+            agent.destinationY = 300;
+            
+            agent.draw(mockCtx, true);
+            
+            // Should have called stroke multiple times (left edge, right edge, centerline)
+            expect(mockCtx.stroke).toHaveBeenCalledTimes(3);
+            
+            // Should have drawn edge lines with semi-transparent color
+            const calls = mockCtx.strokeStyle;
+            // The edge lines use rgba with 0.3 alpha, centerline uses solid color
+            expect(mockCtx.beginPath).toHaveBeenCalledTimes(4); // 3 lines + 1 agent circle
         });
         
         it('should call methods in correct order', () => {

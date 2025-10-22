@@ -130,7 +130,49 @@ export class Agent {
                 this.radius
             );
             
-            // Use teal for clear line of sight, red for obstructed
+            // Calculate direction and perpendicular vectors for parallel lines
+            const dx = this.destinationX - this.x;
+            const dy = this.destinationY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                const unitDx = dx / distance;
+                const unitDy = dy / distance;
+                
+                // Calculate perpendicular unit vector (rotated 90 degrees)
+                const perpDx = -unitDy;
+                const perpDy = unitDx;
+                
+                // Calculate offset points for left and right edges
+                const leftStartX = this.x + perpDx * (-this.radius);
+                const leftStartY = this.y + perpDy * (-this.radius);
+                const leftEndX = this.destinationX + perpDx * (-this.radius);
+                const leftEndY = this.destinationY + perpDy * (-this.radius);
+                
+                const rightStartX = this.x + perpDx * this.radius;
+                const rightStartY = this.y + perpDy * this.radius;
+                const rightEndX = this.destinationX + perpDx * this.radius;
+                const rightEndY = this.destinationY + perpDy * this.radius;
+                
+                // Draw left and right edge lines (semi-transparent)
+                const edgeColor = losIsClear ? 'rgba(0, 206, 209, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                ctx.strokeStyle = edgeColor;
+                ctx.lineWidth = 1;
+                
+                // Left edge line
+                ctx.beginPath();
+                ctx.moveTo(leftStartX, leftStartY);
+                ctx.lineTo(leftEndX, leftEndY);
+                ctx.stroke();
+                
+                // Right edge line
+                ctx.beginPath();
+                ctx.moveTo(rightStartX, rightStartY);
+                ctx.lineTo(rightEndX, rightEndY);
+                ctx.stroke();
+            }
+            
+            // Draw centerline (main line)
             ctx.strokeStyle = losIsClear ? '#00CED1' : '#FF0000';
             ctx.lineWidth = 1;
             ctx.beginPath();
