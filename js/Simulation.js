@@ -18,6 +18,7 @@ export class Simulation {
         this.showDestinations = false; // Toggle for destination lines
         this.paused = false; // Pause state
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
+        this.selectedAgent = null; // Currently selected agent
         
         this.init();
     }
@@ -118,6 +119,14 @@ export class Simulation {
             }
         }
         return null;
+    }
+    
+    setSelectedAgent(agent) {
+        this.selectedAgent = agent;
+    }
+    
+    getSelectedAgent() {
+        return this.selectedAgent;
     }
     
     getSpawnLocation() {
@@ -225,7 +234,8 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            agent.draw(this.ctx, this.showDestinations);
+            const isSelected = (agent === this.selectedAgent);
+            agent.draw(this.ctx, this.showDestinations, isSelected);
         }
     }
     

@@ -532,7 +532,7 @@ describe('Simulation', () => {
             simulation.draw();
             
             simulation.agents.forEach(agent => {
-                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false);
+                expect(agent.draw).toHaveBeenCalledWith(mockCtx, false, false);
             });
         });
         
@@ -547,7 +547,7 @@ describe('Simulation', () => {
             
             simulation.draw();
             
-            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true);
+            expect(simulation.agents[0].draw).toHaveBeenCalledWith(mockCtx, true, false);
         });
         
         it('should clear canvas before drawing agents', () => {
