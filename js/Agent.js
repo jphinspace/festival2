@@ -1,4 +1,5 @@
 import { IdleState } from './AgentState.js';
+import { hasLineOfSight } from './Pathfinding.js';
 
 // Agent class representing festival attendees
 export class Agent {
@@ -119,7 +120,18 @@ export class Agent {
     draw(ctx, showDestination = false) {
         // Draw destination line if enabled
         if (showDestination) {
-            ctx.strokeStyle = '#00FF00'; // Bright green
+            // Check line of sight to determine line color
+            const losIsClear = hasLineOfSight(
+                this.x, 
+                this.y, 
+                this.destinationX, 
+                this.destinationY, 
+                this.obstacles, 
+                this.radius
+            );
+            
+            // Use teal for clear line of sight, red for obstructed
+            ctx.strokeStyle = losIsClear ? '#00CED1' : '#FF0000';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);

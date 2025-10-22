@@ -531,7 +531,8 @@ describe('Agent', () => {
         it('should draw destination line when showDestination is true', () => {
             agent.draw(mockCtx, true);
             
-            expect(mockCtx.strokeStyle).toBe('#00FF00');
+            // Teal color when line of sight is clear (no obstacles in test setup)
+            expect(mockCtx.strokeStyle).toBe('#00CED1');
             expect(mockCtx.moveTo).toHaveBeenCalledWith(agent.x, agent.y);
             expect(mockCtx.lineTo).toHaveBeenCalledWith(agent.destinationX, agent.destinationY);
             expect(mockCtx.stroke).toHaveBeenCalled();
@@ -543,6 +544,21 @@ describe('Agent', () => {
             expect(mockCtx.stroke).not.toHaveBeenCalled();
             expect(mockCtx.moveTo).not.toHaveBeenCalled();
             expect(mockCtx.lineTo).not.toHaveBeenCalled();
+        });
+        
+        it('should draw red line when line of sight is obstructed', () => {
+            // Agent is at (100, 200), set destination at (100, 100)
+            // Create obstacle between them at (100, 150)
+            const obstacle = new Obstacle(100, 150, 40, 40);
+            agent.obstacles = [obstacle];
+            agent.destinationX = 100;
+            agent.destinationY = 100;
+            
+            agent.draw(mockCtx, true);
+            
+            // Red color when line of sight is obstructed
+            expect(mockCtx.strokeStyle).toBe('#FF0000');
+            expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
         it('should call methods in correct order', () => {
