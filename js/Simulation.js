@@ -122,24 +122,32 @@ export class Simulation {
         return undefined;
     }
     
-    setSelectedAgent(agent) {
-        // Clear existing selections and add new agent if provided
-        this.selectedAgents = agent ? [agent] : [];
+    addSelectedAgent(agent) {
+        // Add agent to selection if not already selected
+        if (!this.selectedAgents.includes(agent)) {
+            this.selectedAgents.push(agent);
+        }
     }
     
-    getSelectedAgent() {
-        // Return first selected agent for backward compatibility
-        return this.selectedAgents.length > 0 ? this.selectedAgents[0] : undefined;
+    clearSelectedAgents() {
+        this.selectedAgents = [];
     }
     
-    setHoveredAgent(agent) {
-        // Clear existing hover and add new agent if provided
-        this.hoveredAgents = agent ? [agent] : [];
+    getSelectedAgents() {
+        return this.selectedAgents;
     }
     
-    getHoveredAgent() {
-        // Return first hovered agent for backward compatibility
-        return this.hoveredAgents.length > 0 ? this.hoveredAgents[0] : undefined;
+    addHoveredAgent(agent) {
+        // Add agent to hover (max size 1, so clear first)
+        this.hoveredAgents = [agent];
+    }
+    
+    clearHoveredAgents() {
+        this.hoveredAgents = [];
+    }
+    
+    getHoveredAgents() {
+        return this.hoveredAgents;
     }
     
     getSpawnLocation() {

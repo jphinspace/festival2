@@ -558,7 +558,7 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Select the first agent
-            simulation.setSelectedAgent(simulation.agents[0]);
+            simulation.addSelectedAgent(simulation.agents[0]);
             
             // Mock both agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -580,7 +580,7 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Hover over the first agent
-            simulation.setHoveredAgent(simulation.agents[0]);
+            simulation.addHoveredAgent(simulation.agents[0]);
             
             // Mock both agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -603,8 +603,8 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Select the first agent and hover over the second
-            simulation.setSelectedAgent(simulation.agents[0]);
-            simulation.setHoveredAgent(simulation.agents[1]);
+            simulation.addSelectedAgent(simulation.agents[0]);
+            simulation.addHoveredAgent(simulation.agents[1]);
             
             // Mock all agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -838,30 +838,31 @@ describe('Simulation', () => {
         });
     });
     
-    describe('setSelectedAgent and getSelectedAgent', () => {
-        it('should set and get selected agent', () => {
+    describe('selected and hovered agents management', () => {
+        it('should add and get selected agents', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             
-            simulation.setSelectedAgent(agent);
+            simulation.addSelectedAgent(agent);
             
-            expect(simulation.getSelectedAgent()).toBe(agent);
+            expect(simulation.getSelectedAgents()).toContain(agent);
+            expect(simulation.getSelectedAgents().length).toBe(1);
         });
         
-        it('should return undefined when no agent is selected', () => {
+        it('should return empty array when no agent is selected', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.getSelectedAgent()).toBeUndefined();
+            expect(simulation.getSelectedAgents()).toEqual([]);
         });
         
-        it('should allow clearing selected agent by setting to undefined', () => {
+        it('should allow clearing selected agents', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             
-            simulation.setSelectedAgent(agent);
-            simulation.setSelectedAgent(undefined);
+            simulation.addSelectedAgent(agent);
+            simulation.clearSelectedAgents();
             
-            expect(simulation.getSelectedAgent()).toBeUndefined();
+            expect(simulation.getSelectedAgents()).toEqual([]);
         });
         
         it('should allow switching between different selected agents', () => {
@@ -869,11 +870,13 @@ describe('Simulation', () => {
             const agent1 = new Agent(100, 200);
             const agent2 = new Agent(300, 400);
             
-            simulation.setSelectedAgent(agent1);
-            expect(simulation.getSelectedAgent()).toBe(agent1);
+            simulation.addSelectedAgent(agent1);
+            expect(simulation.getSelectedAgents()).toContain(agent1);
             
-            simulation.setSelectedAgent(agent2);
-            expect(simulation.getSelectedAgent()).toBe(agent2);
+            simulation.clearSelectedAgents();
+            simulation.addSelectedAgent(agent2);
+            expect(simulation.getSelectedAgents()).toContain(agent2);
+            expect(simulation.getSelectedAgents()).not.toContain(agent1);
         });
     });
 });

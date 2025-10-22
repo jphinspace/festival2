@@ -44,13 +44,13 @@ spawnButton.addEventListener('click', () => {
 
 // Setup tooltip functionality
 const tooltip = document.getElementById('agentTooltip');
-let currentHoveredAgent = undefined;
-let selectedAgent = undefined;
+let currentHoveredAgents = [];
+let selectedAgents = [];
 
 canvas.addEventListener('mousemove', (e) => {
     // Disable hover tooltip when an agent is selected
-    if (selectedAgent) {
-        simulation.setHoveredAgent(undefined);
+    if (selectedAgents.length > 0) {
+        simulation.clearHoveredAgents();
         return;
     }
     
@@ -64,22 +64,22 @@ canvas.addEventListener('mousemove', (e) => {
     const agent = simulation.getAgentAtPosition(x, y);
     
     if (agent) {
-        currentHoveredAgent = agent;
-        simulation.setHoveredAgent(agent);
+        currentHoveredAgents = [agent];
+        simulation.addHoveredAgent(agent);
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
-        currentHoveredAgent = undefined;
-        simulation.setHoveredAgent(undefined);
+        currentHoveredAgents = [];
+        simulation.clearHoveredAgents();
         tooltip.classList.remove('visible');
     }
 });
 
 canvas.addEventListener('mouseleave', () => {
     // Don't hide tooltip if an agent is selected
-    if (!selectedAgent) {
-        currentHoveredAgent = undefined;
-        simulation.setHoveredAgent(undefined);
+    if (selectedAgents.length === 0) {
+        currentHoveredAgents = [];
+        simulation.clearHoveredAgents();
         tooltip.classList.remove('visible');
     }
 });
@@ -96,17 +96,18 @@ canvas.addEventListener('click', (e) => {
     
     if (agent) {
         // Select the clicked agent
-        selectedAgent = agent;
-        simulation.setSelectedAgent(agent);
-        simulation.setHoveredAgent(undefined);
+        selectedAgents = [agent];
+        simulation.clearSelectedAgents();
+        simulation.addSelectedAgent(agent);
+        simulation.clearHoveredAgents();
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
         // Clear selection when clicking empty space
-        selectedAgent = undefined;
-        simulation.setSelectedAgent(undefined);
-        simulation.setHoveredAgent(undefined);
-        currentHoveredAgent = undefined;
+        selectedAgents = [];
+        simulation.clearSelectedAgents();
+        simulation.clearHoveredAgents();
+        currentHoveredAgents = [];
         tooltip.classList.remove('visible');
     }
 });
@@ -132,8 +133,8 @@ function updateTooltip(agent) {
 
 // Update tooltip for selected agent in real-time
 function updateSelectedAgentTooltip() {
-    if (selectedAgent) {
-        updateTooltip(selectedAgent);
+    if (selectedAgents.length > 0) {
+        updateTooltip(selectedAgents[0]);
     }
     requestAnimationFrame(updateSelectedAgentTooltip);
 }
