@@ -124,8 +124,25 @@ export class MovingState extends AgentState {
                 // Normalize direction and apply velocity
                 const dirX = waypointDx / waypointDist;
                 const dirY = waypointDy / waypointDist;
-                agent.x += dirX * speed * deltaTime;
-                agent.y += dirY * speed * deltaTime;
+                const newX = agent.x + dirX * speed * deltaTime;
+                const newY = agent.y + dirY * speed * deltaTime;
+                
+                // Check if new position would collide with any obstacle
+                let wouldCollide = false;
+                for (const obstacle of obstacles) {
+                    if (obstacle.collidesWith(newX, newY, agent.radius)) {
+                        wouldCollide = true;
+                        break;
+                    }
+                }
+                
+                // Only move if new position doesn't collide with obstacles
+                if (!wouldCollide) {
+                    agent.x = newX;
+                    agent.y = newY;
+                }
+                // If collision detected, stay at current position and let pathfinding
+                // recalculate on next update (it will switch to A* mode)
             }
         }
     }
