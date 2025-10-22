@@ -35,6 +35,14 @@ toggleButton.addEventListener('click', () => {
     toggleButton.textContent = isShowing ? 'Hide Destinations' : 'Show Destinations';
 });
 
+// Setup metrics toggle button
+const metricsButton = document.getElementById('toggleMetrics');
+
+metricsButton.addEventListener('click', () => {
+    const isShowing = simulation.toggleMetrics();
+    metricsButton.textContent = isShowing ? 'Hide Metrics' : 'Show Metrics';
+});
+
 // Setup spawn agent button
 const spawnButton = document.getElementById('spawnAgent');
 

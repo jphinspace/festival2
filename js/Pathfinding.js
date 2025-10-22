@@ -146,9 +146,9 @@ export function calculateNextWaypoint(currentX, currentY, goalX, goalY, obstacle
         agentPathState.path = findBoundedPath(currentX, currentY, goalX, goalY, obstacles, agentRadius);
         agentPathState.pathIndex = 0;
         
-        // If A* couldn't find a path, agent should stay in place rather than moving toward blocked goal
+        // If A* couldn't find a path, signal pathfinding error
         if (agentPathState.path.length === 0) {
-            return { x: currentX, y: currentY, mode: 'astar' };
+            return { x: currentX, y: currentY, mode: 'astar', pathfindingError: true };
         }
         // Fall through to astar mode handling
     }
@@ -208,6 +208,38 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
     // Helper to calculate heuristic (Euclidean distance to goal)
     const heuristic = (x, y) => calculateDistance(x, y, goalX, goalY);
     
+    // If start position is inside an obstacle, try to find nearest valid position
+    // This can happen if agent spawned inside obstacle or got pushed in
+    let actualStartX = startX;
+    let actualStartY = startY;
+    if (!isPositionValid(startX, startY, obstacles, agentRadius)) {
+        // Search for nearest valid position in a spiral pattern
+        const searchRadius = GRID_SIZE * 10; // Search up to 10 grid cells (100 pixels) away
+        let found = false;
+        for (let r = GRID_SIZE; r <= searchRadius; r += GRID_SIZE) {
+            // Try 8 directions at this radius
+            const directions = [
+                {dx: r, dy: 0}, {dx: -r, dy: 0}, {dx: 0, dy: r}, {dx: 0, dy: -r},
+                {dx: r, dy: r}, {dx: r, dy: -r}, {dx: -r, dy: r}, {dx: -r, dy: -r}
+            ];
+            for (const dir of directions) {
+                const testX = startX + dir.dx;
+                const testY = startY + dir.dy;
+                if (isPositionValid(testX, testY, obstacles, agentRadius)) {
+                    actualStartX = testX;
+                    actualStartY = testY;
+                    found = true;
+                    break;
+                }
+            }
+            if (found) break;
+        }
+        // If no valid position found nearby, return empty path
+        if (!found) {
+            return [];
+        }
+    }
+    
     // Initialize open and closed sets
     const openSet = [];
     const closedSet = new Set();
@@ -215,10 +247,10 @@ export function findBoundedPath(startX, startY, goalX, goalY, obstacles, agentRa
     const gScore = new Map();
     const fScore = new Map();
     
-    const startKey = getGridKey(startX, startY, GRID_SIZE);
-    openSet.push({ x: startX, y: startY, key: startKey });
+    const startKey = getGridKey(actualStartX, actualStartY, GRID_SIZE);
+    openSet.push({ x: actualStartX, y: actualStartY, key: startKey });
     gScore.set(startKey, 0);
-    fScore.set(startKey, heuristic(startX, startY));
+    fScore.set(startKey, heuristic(actualStartX, actualStartY));
     
     let expansions = 0;
     

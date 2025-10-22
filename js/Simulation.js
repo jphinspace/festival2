@@ -20,6 +20,12 @@ export class Simulation {
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
         this.selectedAgent = null; // Currently selected agent
         this.hoveredAgent = null; // Currently hovered agent
+        this.showMetrics = false; // Toggle for metrics display
+        
+        // Metrics tracking
+        this.metrics = {
+            pathfindingErrors: 0
+        };
         
         this.init();
     }
@@ -105,6 +111,11 @@ export class Simulation {
     toggleDestinations() {
         this.showDestinations = !this.showDestinations;
         return this.showDestinations;
+    }
+    
+    toggleMetrics() {
+        this.showMetrics = !this.showMetrics;
+        return this.showMetrics;
     }
     
     getAgentAtPosition(x, y) {
@@ -207,6 +218,7 @@ export class Simulation {
         const agent = new Agent(location.x, location.y, 'fan');
         agent.obstacles = this.obstacles;
         agent.specialMovementZones = this.specialMovementZones;
+        agent.simulation = this; // Add reference to simulation for metrics
         this.agents.push(agent);
     }
     
@@ -247,6 +259,33 @@ export class Simulation {
             const isHovered = (agent === this.hoveredAgent);
             agent.draw(this.ctx, this.showDestinations, isSelected, isHovered);
         }
+        
+        // Draw metrics if enabled
+        if (this.showMetrics) {
+            this.drawMetrics();
+        }
+    }
+    
+    drawMetrics() {
+        // Draw metrics panel in top-right corner
+        const padding = 10;
+        const lineHeight = 20;
+        const panelX = this.canvas.width - 200;
+        const panelY = 10;
+        
+        // Draw semi-transparent background
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(panelX, panelY, 190, 60);
+        
+        // Draw title
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = 'bold 14px sans-serif';
+        this.ctx.fillText('Metrics', panelX + padding, panelY + padding + 12);
+        
+        // Draw pathfinding errors
+        this.ctx.font = '12px sans-serif';
+        this.ctx.fillText(`Pathfinding Errors: ${this.metrics.pathfindingErrors}`, 
+                         panelX + padding, panelY + padding + 12 + lineHeight);
     }
     
     run() {

@@ -113,6 +113,17 @@ export class MovingState extends AgentState {
                 agent.pathState
             );
             
+            // Check for pathfinding error - if so, transition to IDLE to reset
+            if (waypoint.pathfindingError) {
+                // Increment pathfinding error metric if it exists
+                if (agent.simulation && agent.simulation.metrics) {
+                    agent.simulation.metrics.pathfindingErrors++;
+                }
+                // Transition to IDLE to pick a new destination
+                agent.transitionTo(new IdleState(), canvasWidth, canvasHeight);
+                return;
+            }
+            
             // Calculate direction to waypoint
             const waypointDx = waypoint.x - agent.x;
             const waypointDy = waypoint.y - agent.y;
