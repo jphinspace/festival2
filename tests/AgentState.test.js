@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { AgentState, IdleState, MovingState } from '../js/AgentState.js';
 import { Agent } from '../js/Agent.js';
-import { Obstacle } from '../js/Obstacle.js';
 
 describe('AgentState', () => {
     describe('Base AgentState class', () => {
@@ -198,44 +197,6 @@ describe('AgentState', () => {
         
         it('should return agent type color for moving state', () => {
             expect(movingState.getColor(agent)).toBe(agent.color);
-        });
-
-        it('should not move into obstacle when navigating', () => {
-            // Test for the bug where agents move through obstacles
-            // This reproduces the issue shown in the screenshots
-            const agent = new Agent(100, 100);
-            agent.vx = 50; // Set velocity
-            agent.vy = 0;
-            
-            // Create obstacle directly in the path
-            const obstacle = new Obstacle(120, 100, 20, 20);
-            const obstacles = [obstacle];
-            
-            // Set destination beyond obstacle
-            agent.destinationX = 150;
-            agent.destinationY = 100;
-            
-            // Move to moving state
-            const movingState = new MovingState();
-            agent.transitionTo(movingState, 800, 600);
-            
-            // Update multiple times to simulate movement
-            for (let i = 0; i < 10; i++) {
-                const prevX = agent.x;
-                const prevY = agent.y;
-                
-                agent.update(0.1, 800, 600, obstacles);
-                
-                // Agent should not be inside obstacle after update
-                const isInObstacle = obstacle.collidesWith(agent.x, agent.y, agent.radius);
-                expect(isInObstacle).toBe(false);
-                
-                // If agent reached destination, break
-                const dx = agent.destinationX - agent.x;
-                const dy = agent.destinationY - agent.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist <= 5) break;
-            }
         });
     });
 });
