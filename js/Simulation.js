@@ -18,8 +18,8 @@ export class Simulation {
         this.showDestinations = false; // Toggle for destination lines
         this.paused = false; // Pause state
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
-        this.selectedAgent = null; // Currently selected agent
-        this.hoveredAgent = null; // Currently hovered agent
+        this.selectedAgents = []; // Currently selected agents (list allows future multi-select)
+        this.hoveredAgents = []; // Currently hovered agents (list for consistency, max size 1)
         
         this.init();
     }
@@ -116,26 +116,38 @@ export class Simulation {
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance <= agent.radius) {
-                return agent;
+                return [agent];
             }
         }
-        return null;
+        return [];
     }
     
-    setSelectedAgent(agent) {
-        this.selectedAgent = agent;
+    addSelectedAgent(agent) {
+        // Add agent to selection if not already selected
+        if (!this.selectedAgents.includes(agent)) {
+            this.selectedAgents.push(agent);
+        }
     }
     
-    getSelectedAgent() {
-        return this.selectedAgent;
+    clearSelectedAgents() {
+        this.selectedAgents = [];
     }
     
-    setHoveredAgent(agent) {
-        this.hoveredAgent = agent;
+    getSelectedAgents() {
+        return this.selectedAgents;
     }
     
-    getHoveredAgent() {
-        return this.hoveredAgent;
+    addHoveredAgent(agent) {
+        // Add agent to hover (max size 1, so clear first)
+        this.hoveredAgents = [agent];
+    }
+    
+    clearHoveredAgents() {
+        this.hoveredAgents = [];
+    }
+    
+    getHoveredAgents() {
+        return this.hoveredAgents;
     }
     
     getSpawnLocation() {
@@ -243,8 +255,8 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            const isSelected = (agent === this.selectedAgent);
-            const isHovered = (agent === this.hoveredAgent);
+            const isSelected = this.selectedAgents.includes(agent);
+            const isHovered = this.hoveredAgents.includes(agent);
             agent.draw(this.ctx, this.showDestinations, isSelected, isHovered);
         }
     }

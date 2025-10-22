@@ -558,7 +558,7 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Select the first agent
-            simulation.setSelectedAgent(simulation.agents[0]);
+            simulation.addSelectedAgent(simulation.agents[0]);
             
             // Mock both agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -580,7 +580,7 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Hover over the first agent
-            simulation.setHoveredAgent(simulation.agents[0]);
+            simulation.addHoveredAgent(simulation.agents[0]);
             
             // Mock both agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -603,8 +603,8 @@ describe('Simulation', () => {
             simulation.spawnFanAgent();
             
             // Select the first agent and hover over the second
-            simulation.setSelectedAgent(simulation.agents[0]);
-            simulation.setHoveredAgent(simulation.agents[1]);
+            simulation.addSelectedAgent(simulation.agents[0]);
+            simulation.addHoveredAgent(simulation.agents[1]);
             
             // Mock all agent draw methods
             simulation.agents[0].draw = jest.fn();
@@ -777,91 +777,93 @@ describe('Simulation', () => {
     });
     
     describe('getAgentAtPosition', () => {
-        it('should return agent when position is within agent radius', () => {
+        it('should return array with agent when position is within agent radius', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(102, 202);
+            const foundAgents = simulation.getAgentAtPosition(102, 202);
             
-            expect(foundAgent).toBe(agent);
+            expect(foundAgents).toEqual([agent]);
+            expect(foundAgents.length).toBe(1);
         });
         
-        it('should return null when position is outside all agent radii', () => {
+        it('should return empty array when position is outside all agent radii', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(200, 200);
+            const foundAgents = simulation.getAgentAtPosition(200, 200);
             
-            expect(foundAgent).toBeNull();
+            expect(foundAgents).toEqual([]);
         });
         
-        it('should return null when there are no agents', () => {
+        it('should return empty array when there are no agents', () => {
             const simulation = new Simulation(canvas);
             
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBeNull();
+            expect(foundAgents).toEqual([]);
         });
         
-        it('should return agent when position is exactly on agent center', () => {
-            const simulation = new Simulation(canvas);
-            const agent = new Agent(100, 200);
-            simulation.agents.push(agent);
-            
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
-            
-            expect(foundAgent).toBe(agent);
-        });
-        
-        it('should return agent when position is exactly on agent radius edge', () => {
+        it('should return array with agent when position is exactly on agent center', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
-            const foundAgent = simulation.getAgentAtPosition(105, 200); // radius = 5
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBe(agent);
+            expect(foundAgents).toEqual([agent]);
         });
         
-        it('should return top-most agent when multiple agents overlap', () => {
+        it('should return array with agent when position is exactly on agent radius edge', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            simulation.agents.push(agent);
+            
+            const foundAgents = simulation.getAgentAtPosition(105, 200); // radius = 5
+            
+            expect(foundAgents).toEqual([agent]);
+        });
+        
+        it('should return array with top-most agent when multiple agents overlap', () => {
             const simulation = new Simulation(canvas);
             const agent1 = new Agent(100, 200);
             const agent2 = new Agent(100, 200);
             simulation.agents.push(agent1);
             simulation.agents.push(agent2);
             
-            const foundAgent = simulation.getAgentAtPosition(100, 200);
+            const foundAgents = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBe(agent2); // Last agent added is top-most
+            expect(foundAgents).toEqual([agent2]); // Last agent added is top-most
         });
     });
     
-    describe('setSelectedAgent and getSelectedAgent', () => {
-        it('should set and get selected agent', () => {
+    describe('selected and hovered agents management', () => {
+        it('should add and get selected agents', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             
-            simulation.setSelectedAgent(agent);
+            simulation.addSelectedAgent(agent);
             
-            expect(simulation.getSelectedAgent()).toBe(agent);
+            expect(simulation.getSelectedAgents()).toContain(agent);
+            expect(simulation.getSelectedAgents().length).toBe(1);
         });
         
-        it('should return null when no agent is selected', () => {
+        it('should return empty array when no agent is selected', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.getSelectedAgent()).toBeNull();
+            expect(simulation.getSelectedAgents()).toEqual([]);
         });
         
-        it('should allow clearing selected agent by setting to null', () => {
+        it('should allow clearing selected agents', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             
-            simulation.setSelectedAgent(agent);
-            simulation.setSelectedAgent(null);
+            simulation.addSelectedAgent(agent);
+            simulation.clearSelectedAgents();
             
-            expect(simulation.getSelectedAgent()).toBeNull();
+            expect(simulation.getSelectedAgents()).toEqual([]);
         });
         
         it('should allow switching between different selected agents', () => {
@@ -869,11 +871,65 @@ describe('Simulation', () => {
             const agent1 = new Agent(100, 200);
             const agent2 = new Agent(300, 400);
             
-            simulation.setSelectedAgent(agent1);
-            expect(simulation.getSelectedAgent()).toBe(agent1);
+            simulation.addSelectedAgent(agent1);
+            expect(simulation.getSelectedAgents()).toContain(agent1);
             
-            simulation.setSelectedAgent(agent2);
-            expect(simulation.getSelectedAgent()).toBe(agent2);
+            simulation.clearSelectedAgents();
+            simulation.addSelectedAgent(agent2);
+            expect(simulation.getSelectedAgents()).toContain(agent2);
+            expect(simulation.getSelectedAgents()).not.toContain(agent1);
+        });
+        
+        it('should not add duplicate selected agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addSelectedAgent(agent);
+            simulation.addSelectedAgent(agent);
+            
+            expect(simulation.getSelectedAgents().length).toBe(1);
+            expect(simulation.getSelectedAgents()).toContain(agent);
+        });
+        
+        it('should add and get hovered agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addHoveredAgent(agent);
+            
+            expect(simulation.getHoveredAgents()).toContain(agent);
+            expect(simulation.getHoveredAgents().length).toBe(1);
+        });
+        
+        it('should return empty array when no agent is hovered', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.getHoveredAgents()).toEqual([]);
+        });
+        
+        it('should allow clearing hovered agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addHoveredAgent(agent);
+            simulation.clearHoveredAgents();
+            
+            expect(simulation.getHoveredAgents()).toEqual([]);
+        });
+        
+        it('should replace hovered agent when adding new one', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(300, 400);
+            
+            simulation.addHoveredAgent(agent1);
+            expect(simulation.getHoveredAgents()).toContain(agent1);
+            
+            // Adding a new hovered agent should replace the old one (max size 1)
+            simulation.addHoveredAgent(agent2);
+            expect(simulation.getHoveredAgents()).toContain(agent2);
+            expect(simulation.getHoveredAgents()).not.toContain(agent1);
+            expect(simulation.getHoveredAgents().length).toBe(1);
         });
     });
 });
