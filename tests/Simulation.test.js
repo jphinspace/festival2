@@ -787,22 +787,22 @@ describe('Simulation', () => {
             expect(foundAgent).toBe(agent);
         });
         
-        it('should return null when position is outside all agent radii', () => {
+        it('should return undefined when position is outside all agent radii', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             simulation.agents.push(agent);
             
             const foundAgent = simulation.getAgentAtPosition(200, 200);
             
-            expect(foundAgent).toBeNull();
+            expect(foundAgent).toBeUndefined();
         });
         
-        it('should return null when there are no agents', () => {
+        it('should return undefined when there are no agents', () => {
             const simulation = new Simulation(canvas);
             
             const foundAgent = simulation.getAgentAtPosition(100, 200);
             
-            expect(foundAgent).toBeNull();
+            expect(foundAgent).toBeUndefined();
         });
         
         it('should return agent when position is exactly on agent center', () => {
@@ -848,20 +848,20 @@ describe('Simulation', () => {
             expect(simulation.getSelectedAgent()).toBe(agent);
         });
         
-        it('should return null when no agent is selected', () => {
+        it('should return undefined when no agent is selected', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.getSelectedAgent()).toBeNull();
+            expect(simulation.getSelectedAgent()).toBeUndefined();
         });
         
-        it('should allow clearing selected agent by setting to null', () => {
+        it('should allow clearing selected agent by setting to undefined', () => {
             const simulation = new Simulation(canvas);
             const agent = new Agent(100, 200);
             
             simulation.setSelectedAgent(agent);
-            simulation.setSelectedAgent(null);
+            simulation.setSelectedAgent(undefined);
             
-            expect(simulation.getSelectedAgent()).toBeNull();
+            expect(simulation.getSelectedAgent()).toBeUndefined();
         });
         
         it('should allow switching between different selected agents', () => {

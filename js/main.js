@@ -44,13 +44,13 @@ spawnButton.addEventListener('click', () => {
 
 // Setup tooltip functionality
 const tooltip = document.getElementById('agentTooltip');
-let currentHoveredAgent = null;
-let selectedAgent = null;
+let currentHoveredAgent = undefined;
+let selectedAgent = undefined;
 
 canvas.addEventListener('mousemove', (e) => {
     // Disable hover tooltip when an agent is selected
     if (selectedAgent) {
-        simulation.setHoveredAgent(null);
+        simulation.setHoveredAgent(undefined);
         return;
     }
     
@@ -69,8 +69,8 @@ canvas.addEventListener('mousemove', (e) => {
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
-        currentHoveredAgent = null;
-        simulation.setHoveredAgent(null);
+        currentHoveredAgent = undefined;
+        simulation.setHoveredAgent(undefined);
         tooltip.classList.remove('visible');
     }
 });
@@ -78,8 +78,8 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseleave', () => {
     // Don't hide tooltip if an agent is selected
     if (!selectedAgent) {
-        currentHoveredAgent = null;
-        simulation.setHoveredAgent(null);
+        currentHoveredAgent = undefined;
+        simulation.setHoveredAgent(undefined);
         tooltip.classList.remove('visible');
     }
 });
@@ -98,15 +98,15 @@ canvas.addEventListener('click', (e) => {
         // Select the clicked agent
         selectedAgent = agent;
         simulation.setSelectedAgent(agent);
-        simulation.setHoveredAgent(null);
+        simulation.setHoveredAgent(undefined);
         updateTooltip(agent);
         tooltip.classList.add('visible');
     } else {
         // Clear selection when clicking empty space
-        selectedAgent = null;
-        simulation.setSelectedAgent(null);
-        simulation.setHoveredAgent(null);
-        currentHoveredAgent = null;
+        selectedAgent = undefined;
+        simulation.setSelectedAgent(undefined);
+        simulation.setHoveredAgent(undefined);
+        currentHoveredAgent = undefined;
         tooltip.classList.remove('visible');
     }
 });

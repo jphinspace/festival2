@@ -18,8 +18,8 @@ export class Simulation {
         this.showDestinations = false; // Toggle for destination lines
         this.paused = false; // Pause state
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
-        this.selectedAgent = null; // Currently selected agent
-        this.hoveredAgent = null; // Currently hovered agent
+        this.selectedAgent = undefined; // Currently selected agent
+        this.hoveredAgent = undefined; // Currently hovered agent
         
         this.init();
     }
@@ -119,7 +119,7 @@ export class Simulation {
                 return agent;
             }
         }
-        return null;
+        return undefined;
     }
     
     setSelectedAgent(agent) {
