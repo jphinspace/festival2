@@ -879,5 +879,57 @@ describe('Simulation', () => {
             expect(simulation.getSelectedAgents()).toContain(agent2);
             expect(simulation.getSelectedAgents()).not.toContain(agent1);
         });
+        
+        it('should not add duplicate selected agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addSelectedAgent(agent);
+            simulation.addSelectedAgent(agent);
+            
+            expect(simulation.getSelectedAgents().length).toBe(1);
+            expect(simulation.getSelectedAgents()).toContain(agent);
+        });
+        
+        it('should add and get hovered agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addHoveredAgent(agent);
+            
+            expect(simulation.getHoveredAgents()).toContain(agent);
+            expect(simulation.getHoveredAgents().length).toBe(1);
+        });
+        
+        it('should return empty array when no agent is hovered', () => {
+            const simulation = new Simulation(canvas);
+            
+            expect(simulation.getHoveredAgents()).toEqual([]);
+        });
+        
+        it('should allow clearing hovered agents', () => {
+            const simulation = new Simulation(canvas);
+            const agent = new Agent(100, 200);
+            
+            simulation.addHoveredAgent(agent);
+            simulation.clearHoveredAgents();
+            
+            expect(simulation.getHoveredAgents()).toEqual([]);
+        });
+        
+        it('should replace hovered agent when adding new one', () => {
+            const simulation = new Simulation(canvas);
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(300, 400);
+            
+            simulation.addHoveredAgent(agent1);
+            expect(simulation.getHoveredAgents()).toContain(agent1);
+            
+            // Adding a new hovered agent should replace the old one (max size 1)
+            simulation.addHoveredAgent(agent2);
+            expect(simulation.getHoveredAgents()).toContain(agent2);
+            expect(simulation.getHoveredAgents()).not.toContain(agent1);
+            expect(simulation.getHoveredAgents().length).toBe(1);
+        });
     });
 });
