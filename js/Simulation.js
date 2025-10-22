@@ -16,6 +16,8 @@ export class Simulation {
         this.lastTime = performance.now();
         this.running = true;
         this.showDestinations = false; // Toggle for destination lines
+        this.paused = false; // Pause state
+        this.desiredTickRate = 1.0; // Store the desired tick rate when paused
         
         this.init();
     }
@@ -73,12 +75,49 @@ export class Simulation {
     }
     
     setTickRate(rate) {
-        this.tickRate = rate;
+        if (this.paused) {
+            // Store the desired rate but don't apply it
+            this.desiredTickRate = rate;
+        } else {
+            this.tickRate = rate;
+            this.desiredTickRate = rate;
+        }
+    }
+    
+    setPaused(paused) {
+        this.paused = paused;
+        if (paused) {
+            // Store current tick rate and set to 0
+            this.desiredTickRate = this.tickRate;
+            this.tickRate = 0;
+        } else {
+            // Restore the desired tick rate
+            this.tickRate = this.desiredTickRate;
+        }
+    }
+    
+    isPaused() {
+        return this.paused;
     }
     
     toggleDestinations() {
         this.showDestinations = !this.showDestinations;
         return this.showDestinations;
+    }
+    
+    getAgentAtPosition(x, y) {
+        // Check agents in reverse order (top-most rendered first)
+        for (let i = this.agents.length - 1; i >= 0; i--) {
+            const agent = this.agents[i];
+            const dx = x - agent.x;
+            const dy = y - agent.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance <= agent.radius) {
+                return agent;
+            }
+        }
+        return null;
     }
     
     getSpawnLocation() {

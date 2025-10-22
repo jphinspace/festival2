@@ -55,3 +55,34 @@ button:active {
     width: 80px;
     text-align: left;
 }
+
+#agentTooltip {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(22, 33, 62, 0.95);
+    color: #e0e0e0;
+    padding: 12px 15px;
+    border-radius: 5px;
+    border: 1px solid #0f3460;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    pointer-events: none;
+    display: none;
+    min-width: 250px;
+}
+
+#agentTooltip.visible {
+    display: block;
+}
+
+#agentTooltip .tooltip-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #FFB380;
+}
+
+#agentTooltip .tooltip-row {
+    margin: 3px 0;
+}

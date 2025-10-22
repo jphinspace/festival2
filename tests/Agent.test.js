@@ -556,4 +556,138 @@ describe('Agent', () => {
             expect(calls).toEqual(['beginPath', 'arc', 'fill']);
         });
     });
+    
+    describe('getSpeed', () => {
+        it('should return the magnitude of velocity', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 30;
+            agent.vy = 40;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(50); // sqrt(30^2 + 40^2) = 50
+        });
+        
+        it('should return 0 when agent is not moving', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = 0;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(0);
+        });
+        
+        it('should handle negative velocities', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -30;
+            agent.vy = -40;
+            
+            const speed = agent.getSpeed();
+            
+            expect(speed).toBe(50);
+        });
+    });
+    
+    describe('getDirection', () => {
+        it('should return 0 degrees for north direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = -10; // Moving north (negative y)
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(0);
+        });
+        
+        it('should return 90 degrees for east direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10; // Moving east (positive x)
+            agent.vy = 0;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(90);
+        });
+        
+        it('should return 180 degrees for south direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 0;
+            agent.vy = 10; // Moving south (positive y)
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(180);
+        });
+        
+        it('should return 270 degrees for west direction', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -10; // Moving west (negative x)
+            agent.vy = 0;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(270);
+        });
+        
+        it('should handle diagonal directions (northeast)', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10;
+            agent.vy = -10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(45);
+        });
+        
+        it('should handle diagonal directions (southeast)', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = 10;
+            agent.vy = 10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBe(135);
+        });
+        
+        it('should normalize angles to 0-360 range', () => {
+            const agent = new Agent(100, 200);
+            agent.vx = -10;
+            agent.vy = -10;
+            
+            const direction = agent.getDirection();
+            
+            expect(direction).toBeGreaterThanOrEqual(0);
+            expect(direction).toBeLessThan(360);
+        });
+    });
+    
+    describe('getPathfindingMode', () => {
+        it('should return "bug" when pathState.mode is not set', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = {};
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('bug');
+        });
+        
+        it('should return "bug" when pathState.mode is "bug"', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = { mode: 'bug' };
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('bug');
+        });
+        
+        it('should return "astar" when pathState.mode is "astar"', () => {
+            const agent = new Agent(100, 200);
+            agent.pathState = { mode: 'astar' };
+            
+            const mode = agent.getPathfindingMode();
+            
+            expect(mode).toBe('astar');
+        });
+    });
 });
