@@ -18,8 +18,8 @@ export class Simulation {
         this.showDestinations = false; // Toggle for destination lines
         this.paused = false; // Pause state
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
-        this.selectedAgent = undefined; // Currently selected agent
-        this.hoveredAgent = undefined; // Currently hovered agent
+        this.selectedAgents = []; // Currently selected agents (list allows future multi-select)
+        this.hoveredAgents = []; // Currently hovered agents (list for consistency, max size 1)
         
         this.init();
     }
@@ -123,19 +123,23 @@ export class Simulation {
     }
     
     setSelectedAgent(agent) {
-        this.selectedAgent = agent;
+        // Clear existing selections and add new agent if provided
+        this.selectedAgents = agent ? [agent] : [];
     }
     
     getSelectedAgent() {
-        return this.selectedAgent;
+        // Return first selected agent for backward compatibility
+        return this.selectedAgents.length > 0 ? this.selectedAgents[0] : undefined;
     }
     
     setHoveredAgent(agent) {
-        this.hoveredAgent = agent;
+        // Clear existing hover and add new agent if provided
+        this.hoveredAgents = agent ? [agent] : [];
     }
     
     getHoveredAgent() {
-        return this.hoveredAgent;
+        // Return first hovered agent for backward compatibility
+        return this.hoveredAgents.length > 0 ? this.hoveredAgents[0] : undefined;
     }
     
     getSpawnLocation() {
@@ -243,8 +247,8 @@ export class Simulation {
         
         // Draw all agents
         for (const agent of this.agents) {
-            const isSelected = (agent === this.selectedAgent);
-            const isHovered = (agent === this.hoveredAgent);
+            const isSelected = this.selectedAgents.includes(agent);
+            const isHovered = this.hoveredAgents.includes(agent);
             agent.draw(this.ctx, this.showDestinations, isSelected, isHovered);
         }
     }
