@@ -19,6 +19,7 @@ export class Simulation {
         this.paused = false; // Pause state
         this.desiredTickRate = 1.0; // Store the desired tick rate when paused
         this.selectedAgent = null; // Currently selected agent
+        this.hoveredAgent = null; // Currently hovered agent
         
         this.init();
     }
@@ -129,6 +130,14 @@ export class Simulation {
         return this.selectedAgent;
     }
     
+    setHoveredAgent(agent) {
+        this.hoveredAgent = agent;
+    }
+    
+    getHoveredAgent() {
+        return this.hoveredAgent;
+    }
+    
     getSpawnLocation() {
         const agentRadius = 5;
         const maxAttempts = 100;
@@ -235,7 +244,8 @@ export class Simulation {
         // Draw all agents
         for (const agent of this.agents) {
             const isSelected = (agent === this.selectedAgent);
-            agent.draw(this.ctx, this.showDestinations, isSelected);
+            const isHovered = (agent === this.hoveredAgent);
+            agent.draw(this.ctx, this.showDestinations, isSelected, isHovered);
         }
     }
     
