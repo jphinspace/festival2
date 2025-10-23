@@ -78,6 +78,48 @@ export function reconstructPath(currentNode, cameFrom, goalX, goalY) {
 }
 
 /**
+ * Check if there's a clear line of sight along a single path between two points
+ * This function checks a single line path without checking parallel paths.
+ * Useful for checking individual visualization lines.
+ * 
+ * @param {number} x1 - Start X
+ * @param {number} y1 - Start Y
+ * @param {number} x2 - End X
+ * @param {number} y2 - End Y
+ * @param {Array<Obstacle>} obstacles - Array of obstacles
+ * @param {number} checkRadius - Radius to use for collision checking at each sample point
+ * @returns {boolean} True if line of sight is clear
+ */
+export function hasLineOfSightSinglePath(x1, y1, x2, y2, obstacles, checkRadius) {
+    // Sample points along the line
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance === 0) {
+        return true;
+    }
+    
+    // Sample at regular intervals (every 2 pixels)
+    const steps = Math.ceil(distance / 2);
+    
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = x1 + dx * t;
+        const y = y1 + dy * t;
+        
+        // Check if this point collides with any obstacle
+        for (const obstacle of obstacles) {
+            if (obstacle.collidesWith(x, y, checkRadius)) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+/**
  * Check if there's a clear line of sight between two points (no obstacles)
  * This function checks if an agent with the given radius can move from (x1, y1) to (x2, y2)
  * without colliding with any obstacles. It samples points along the centerline and also

@@ -642,6 +642,52 @@ describe('Agent', () => {
             expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
+        it('should color lines independently when some are obstructed', () => {
+            // Create an obstacle that only blocks the left edge line
+            // Agent at (100, 200) with radius 5, destination at (100, 100)
+            // Left edge will be at x=100 (perpendicular offset), right edge at x=100
+            // But for a vertical path, left/right are actually offset horizontally
+            
+            // Let's use a horizontal path to make it clearer
+            agent.x = 100;
+            agent.y = 100;
+            agent.destinationX = 200;
+            agent.destinationY = 100;
+            
+            // Create a thin obstacle that only blocks the top edge (left in perpendicular terms)
+            // For horizontal path from (100,100) to (200,100), perpendicular offset is vertical
+            // Left edge is at y=95, right edge at y=105
+            const obstacle = new Obstacle(150, 95, 20, 3); // Thin obstacle at y=95
+            agent.obstacles = [obstacle];
+            
+            // Capture all strokeStyle values
+            const strokeStyles = [];
+            const originalStrokeStyleSetter = Object.getOwnPropertyDescriptor(mockCtx, 'strokeStyle').set ||
+                ((value) => { mockCtx._strokeStyle = value; });
+            
+            Object.defineProperty(mockCtx, 'strokeStyle', {
+                set: (value) => {
+                    strokeStyles.push(value);
+                    originalStrokeStyleSetter.call(mockCtx, value);
+                },
+                get: () => mockCtx._strokeStyle
+            });
+            
+            agent.draw(mockCtx, true);
+            
+            // We expect to see a mix of colors:
+            // - Left edge (y=95) should be RED (obstructed)
+            // - Right edge (y=105) should be TEAL (clear)
+            // - Center (y=100) should be TEAL (clear)
+            
+            // strokeStyles should contain both red and teal
+            const hasRed = strokeStyles.some(s => s === 'rgba(255, 0, 0, 1.0)' || s === '#FF0000');
+            const hasTeal = strokeStyles.some(s => s === 'rgba(0, 206, 209, 1.0)' || s === '#00CED1');
+            
+            expect(hasRed).toBe(true); // At least one line is red (obstructed)
+            expect(hasTeal).toBe(true); // At least one line is teal (clear)
+        });
+        
         it('should not draw destination line when showDestination, isSelected, and isHovered are all false', () => {
             mockCtx.stroke = jest.fn();
             mockCtx.moveTo = jest.fn();

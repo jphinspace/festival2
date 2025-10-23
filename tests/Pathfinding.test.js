@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { 
-    hasLineOfSight, 
+    hasLineOfSight,
+    hasLineOfSightSinglePath,
     calculateNextWaypoint,
     calculateDistance,
     getGridKey,
@@ -330,6 +331,64 @@ describe('Pathfinding', () => {
                 
                 expect(result).toBe(true);
             });
+        });
+    });
+
+    describe('hasLineOfSightSinglePath', () => {
+        it('should return true when no obstacles block a single path', () => {
+            const obstacles = [];
+            const result = hasLineOfSightSinglePath(0, 0, 100, 100, obstacles, 0);
+            
+            expect(result).toBe(true);
+        });
+
+        it('should return false when obstacle blocks the single path', () => {
+            const obstacles = [new Obstacle(50, 50, 40, 40)];
+            const result = hasLineOfSightSinglePath(0, 0, 100, 100, obstacles, 5);
+            
+            expect(result).toBe(false);
+        });
+
+        it('should check a single line without perpendicular offsets', () => {
+            // Create an obstacle that would block a parallel path but not the center line
+            // Horizontal path at y=50
+            const obstacles = [new Obstacle(50, 55, 10, 3)]; // Obstacle at y=55
+            
+            // Single path at y=50 with no radius should be clear
+            const result = hasLineOfSightSinglePath(0, 50, 100, 50, obstacles, 0);
+            expect(result).toBe(true);
+            
+            // But if we use a radius that reaches the obstacle, it should be blocked
+            const resultWithRadius = hasLineOfSightSinglePath(0, 50, 100, 50, obstacles, 6);
+            expect(resultWithRadius).toBe(false);
+        });
+
+        it('should handle zero distance', () => {
+            const obstacles = [new Obstacle(50, 50, 40, 40)];
+            const result = hasLineOfSightSinglePath(100, 100, 100, 100, obstacles, 5);
+            
+            expect(result).toBe(true);
+        });
+
+        it('should be usable for checking edge paths independently', () => {
+            // This is the key use case: checking edge lines for visualization
+            // Agent at (100, 100), destination at (200, 100) (horizontal path)
+            // Perpendicular offset for left/right edges with radius 5
+            
+            const obstacles = [new Obstacle(150, 95, 20, 3)]; // Blocks left edge at y=95
+            
+            // Check left edge path (y=95)
+            const leftResult = hasLineOfSightSinglePath(100, 95, 200, 95, obstacles, 0);
+            expect(leftResult).toBe(false); // Should be blocked
+            
+            // Check right edge path (y=105)
+            const rightResult = hasLineOfSightSinglePath(100, 105, 200, 105, obstacles, 0);
+            expect(rightResult).toBe(true); // Should be clear
+            
+            // Check center path (y=100) - the obstacle is from y=93.5 to y=96.5, 
+            // and with radius 5, we check from y=95 to y=105, so it will collide
+            const centerResult = hasLineOfSightSinglePath(100, 100, 200, 100, obstacles, 5);
+            expect(centerResult).toBe(false); // Will be blocked because obstacle overlaps with the radius
         });
     });
 
