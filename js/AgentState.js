@@ -216,13 +216,12 @@ export class IdleState extends AgentState {
         // Reset pathfinding state when entering idle
         agent.pathState = {};
         
-        // Set up hunger increment timer
-        this.addTimer('hungerIncrement', 1000, (agent) => {
+        // Set up combined hunger and food stall check timer
+        this.addTimer('hungerAndFoodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            // Increment hunger
             agent.hunger++;
-        });
-        
-        // Set up food stall transition check timer
-        this.addTimer('foodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            
+            // Check if should transition to food stall
             if (shouldTransitionToFoodStall(agent.hunger)) {
                 agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
             }
@@ -273,13 +272,12 @@ export class MovingState extends AgentState {
         // Reset pathfinding state for new destination
         agent.pathState = {};
         
-        // Set up hunger increment timer
-        this.addTimer('hungerIncrement', 1000, (agent) => {
+        // Set up combined hunger and food stall check timer
+        this.addTimer('hungerAndFoodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            // Increment hunger
             agent.hunger++;
-        });
-        
-        // Set up food stall transition check timer
-        this.addTimer('foodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            
+            // Check if should transition to food stall
             if (shouldTransitionToFoodStall(agent.hunger)) {
                 agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
             }
