@@ -11,6 +11,17 @@ describe('FoodStall', () => {
             expect(foodStall.width).toBe(40);
             expect(foodStall.height).toBe(40);
         });
+        
+        it('should create a food stall with a unique ID', () => {
+            const foodStall1 = new FoodStall(100, 150, 40, 40);
+            const foodStall2 = new FoodStall(200, 250, 40, 40);
+            
+            expect(foodStall1.id).toBeDefined();
+            expect(foodStall2.id).toBeDefined();
+            expect(typeof foodStall1.id).toBe('number');
+            expect(typeof foodStall2.id).toBe('number');
+            expect(foodStall1.id).not.toBe(foodStall2.id);
+        });
 
         it('should handle different sizes', () => {
             const foodStall = new FoodStall(50, 75, 30, 60);

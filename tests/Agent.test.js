@@ -17,6 +17,17 @@ describe('Agent', () => {
             expect(agent.destinationY).toBe(200);
         });
         
+        it('should create an agent with a unique ID', () => {
+            const agent1 = new Agent(100, 200);
+            const agent2 = new Agent(150, 250);
+            
+            expect(agent1.id).toBeDefined();
+            expect(agent2.id).toBeDefined();
+            expect(typeof agent1.id).toBe('number');
+            expect(typeof agent2.id).toBe('number');
+            expect(agent1.id).not.toBe(agent2.id);
+        });
+        
         it('should create an agent with specified type', () => {
             const agent = new Agent(50, 75, 'security');
             

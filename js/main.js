@@ -124,6 +124,7 @@ function updateTooltip(agent) {
     
     tooltip.innerHTML = `
         <div class="tooltip-title">Agent Information</div>
+        <div class="tooltip-row"><strong>ID:</strong> ${agent.id}</div>
         <div class="tooltip-row"><strong>State:</strong> ${stateName}</div>
         <div class="tooltip-row"><strong>Location:</strong> ${location}</div>
         <div class="tooltip-row"><strong>Destination:</strong> ${destination}</div>
