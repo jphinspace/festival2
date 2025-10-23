@@ -121,6 +121,7 @@ function updateTooltip(agent) {
     const speed = agent.getSpeed().toFixed(2);
     const direction = agent.getDirection();
     const pathfindingMode = agent.getPathfindingMode().toUpperCase();
+    const hunger = agent.hunger;
     
     tooltip.innerHTML = `
         <div class="tooltip-title">Agent Information</div>
@@ -131,6 +132,7 @@ function updateTooltip(agent) {
         <div class="tooltip-row"><strong>Speed:</strong> ${speed} px/s</div>
         <div class="tooltip-row"><strong>Direction:</strong> ${direction}°</div>
         <div class="tooltip-row"><strong>Pathfinding:</strong> ${pathfindingMode}</div>
+        <div class="tooltip-row"><strong>Hunger:</strong> ${hunger}</div>
     `;
 }
 

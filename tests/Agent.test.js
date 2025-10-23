@@ -61,6 +61,18 @@ describe('Agent', () => {
             
             expect(agent.idleTimer).toBe(1000);
         });
+        
+        it('should initialize hunger to 0', () => {
+            const agent = new Agent(100, 200);
+            
+            expect(agent.hunger).toBe(0);
+        });
+        
+        it('should initialize totalTicks to 0', () => {
+            const agent = new Agent(100, 200);
+            
+            expect(agent.totalTicks).toBe(0);
+        });
     });
     
     describe('getColorForType', () => {
@@ -246,6 +258,70 @@ describe('Agent', () => {
             expect(agent.destinationX).toBeLessThanOrEqual(800);
             expect(agent.destinationY).toBeGreaterThanOrEqual(0);
             expect(agent.destinationY).toBeLessThanOrEqual(600);
+        });
+    });
+    
+    describe('hunger system', () => {
+        let agent;
+        
+        beforeEach(() => {
+            agent = new Agent(400, 300);
+        });
+        
+        it('should not increase hunger when less than 1000 ticks have elapsed', () => {
+            agent.update(0.5, 800, 600); // 500 ticks
+            
+            expect(agent.hunger).toBe(0);
+            expect(agent.totalTicks).toBe(500);
+        });
+        
+        it('should increase hunger by 1 after exactly 1000 ticks', () => {
+            agent.update(1.0, 800, 600); // 1000 ticks
+            
+            expect(agent.hunger).toBe(1);
+            expect(agent.totalTicks).toBe(1000);
+        });
+        
+        it('should increase hunger by 2 after 2000 ticks', () => {
+            agent.update(2.0, 800, 600); // 2000 ticks
+            
+            expect(agent.hunger).toBe(2);
+            expect(agent.totalTicks).toBe(2000);
+        });
+        
+        it('should increase hunger incrementally across multiple updates', () => {
+            agent.update(0.5, 800, 600); // 500 ticks, hunger = 0
+            expect(agent.hunger).toBe(0);
+            
+            agent.update(0.3, 800, 600); // 300 ticks, total = 800, hunger = 0
+            expect(agent.hunger).toBe(0);
+            
+            agent.update(0.25, 800, 600); // 250 ticks, total = 1050, hunger = 1
+            expect(agent.hunger).toBe(1);
+            expect(agent.totalTicks).toBe(1050);
+        });
+        
+        it('should handle large time deltas correctly', () => {
+            agent.update(5.5, 800, 600); // 5500 ticks
+            
+            expect(agent.hunger).toBe(5);
+            expect(agent.totalTicks).toBe(5500);
+        });
+        
+        it('should have no upper limit on hunger', () => {
+            agent.update(100.0, 800, 600); // 100000 ticks
+            
+            expect(agent.hunger).toBe(100);
+            expect(agent.totalTicks).toBe(100000);
+        });
+        
+        it('should track totalTicks accurately', () => {
+            agent.update(0.1, 800, 600); // 100 ticks
+            agent.update(0.2, 800, 600); // 200 ticks
+            agent.update(0.3, 800, 600); // 300 ticks
+            
+            expect(agent.totalTicks).toBe(600);
+            expect(agent.hunger).toBe(0);
         });
     });
     

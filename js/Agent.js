@@ -35,6 +35,10 @@ export class Agent {
         // Pathfinding state (persistent for hybrid bug algorithm)
         this.pathState = {};
         
+        // Hunger system
+        this.hunger = 0; // starts at 0 (not hungry)
+        this.totalTicks = 0; // tracks total ticks for hunger increment
+        
         // Initialize state
         this.state.enter(this, 0, 0, this.obstacles);
     }
@@ -108,6 +112,15 @@ export class Agent {
     update(deltaTime, canvasWidth, canvasHeight, obstacles = []) {
         // Update obstacles reference
         this.obstacles = obstacles;
+        
+        // Update hunger system
+        // deltaTime is in seconds, convert to ticks (1000 ticks per second)
+        const ticksElapsed = deltaTime * 1000;
+        this.totalTicks += ticksElapsed;
+        
+        // Increment hunger by 1 for every 1000 ticks
+        const newHunger = Math.floor(this.totalTicks / 1000);
+        this.hunger = newHunger;
         
         // Delegate to current state
         this.state.update(this, deltaTime, canvasWidth, canvasHeight, obstacles);
