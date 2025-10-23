@@ -1,5 +1,5 @@
 import { IdleState } from './AgentState.js';
-import { hasLineOfSight } from './Pathfinding.js';
+import { hasLineOfSight, hasLineOfSightSinglePath } from './Pathfinding.js';
 
 // Agent class representing festival attendees
 export class Agent {
@@ -120,16 +120,6 @@ export class Agent {
     draw(ctx, showDestination = false, isSelected = false, isHovered = false) {
         // Draw destination line if enabled OR if agent is selected/hovered
         if (showDestination || isSelected || isHovered) {
-            // Check line of sight to determine line color
-            const losIsClear = hasLineOfSight(
-                this.x, 
-                this.y, 
-                this.destinationX, 
-                this.destinationY, 
-                this.obstacles, 
-                this.radius
-            );
-            
             // Calculate direction and perpendicular vectors for parallel lines
             const dx = this.destinationX - this.x;
             const dy = this.destinationY - this.y;
@@ -154,26 +144,48 @@ export class Agent {
                 const rightEndX = this.destinationX + perpDx * this.radius;
                 const rightEndY = this.destinationY + perpDy * this.radius;
                 
-                // Draw left and right edge lines (fully opaque)
-                const edgeColor = losIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
-                ctx.strokeStyle = edgeColor;
-                ctx.lineWidth = 1;
+                // Check line of sight independently for each line
+                const leftLosIsClear = hasLineOfSightSinglePath(
+                    leftStartX, leftStartY,
+                    leftEndX, leftEndY,
+                    this.obstacles,
+                    0  // No radius since we're checking the edge path itself
+                );
                 
-                // Left edge line
+                const rightLosIsClear = hasLineOfSightSinglePath(
+                    rightStartX, rightStartY,
+                    rightEndX, rightEndY,
+                    this.obstacles,
+                    0  // No radius since we're checking the edge path itself
+                );
+                
+                // Draw left edge line with its own color
+                const leftColor = leftLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                ctx.strokeStyle = leftColor;
+                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(leftStartX, leftStartY);
                 ctx.lineTo(leftEndX, leftEndY);
                 ctx.stroke();
                 
-                // Right edge line
+                // Draw right edge line with its own color
+                const rightColor = rightLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                ctx.strokeStyle = rightColor;
+                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(rightStartX, rightStartY);
                 ctx.lineTo(rightEndX, rightEndY);
                 ctx.stroke();
             }
             
-            // Draw centerline (main line)
-            ctx.strokeStyle = losIsClear ? '#00CED1' : '#FF0000';
+            // Draw centerline with its own color
+            const centerLosIsClear = hasLineOfSightSinglePath(
+                this.x, this.y,
+                this.destinationX, this.destinationY,
+                this.obstacles,
+                this.radius  // Use agent radius for center path
+            );
+            ctx.strokeStyle = centerLosIsClear ? '#00CED1' : '#FF0000';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
