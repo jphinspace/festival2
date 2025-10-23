@@ -214,6 +214,7 @@ describe('AgentState', () => {
         it('should transition to MovingToFoodStallState when hunger check passes', () => {
             agent.state = movingState;
             agent.hunger = 100; // High hunger
+            agent.hungerChanged = true; // Hunger just changed
             agent.x = 100;
             agent.y = 100;
             agent.destinationX = 200;
@@ -662,6 +663,7 @@ describe('AgentState', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
+            agent.hungerChanged = true; // Hunger just changed
             
             // Mock Math.random to always return 0 (always transition)
             const originalRandom = Math.random;
@@ -678,6 +680,7 @@ describe('AgentState', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 40;
+            agent.hungerChanged = true; // Hunger changed but still low
             
             agent.state.update(agent, 0.1, 800, 600, obstacles);
             
@@ -688,6 +691,7 @@ describe('AgentState', () => {
             agent.state = new MovingState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
+            agent.hungerChanged = true; // Hunger just changed
             agent.x = 100;
             agent.y = 100;
             agent.destinationX = 200;
@@ -702,6 +706,24 @@ describe('AgentState', () => {
             Math.random = originalRandom;
             
             expect(agent.state instanceof MovingToFoodStallState).toBe(true);
+        });
+        
+        it('should not check food stall transition when hunger has not changed', () => {
+            agent.state = new IdleState();
+            agent.state.enter(agent, 800, 600, obstacles);
+            agent.hunger = 100;
+            agent.hungerChanged = false; // Hunger did not change this update
+            
+            // Mock Math.random to always return 0 (would always transition if checked)
+            const originalRandom = Math.random;
+            Math.random = () => 0;
+            
+            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            
+            Math.random = originalRandom;
+            
+            // Should remain in IdleState because hunger didn't change
+            expect(agent.state instanceof IdleState).toBe(true);
         });
     });
 });

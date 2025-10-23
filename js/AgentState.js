@@ -163,7 +163,8 @@ export class IdleState extends AgentState {
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
         // Check if should transition to food stall based on hunger
-        if (shouldTransitionToFoodStall(agent.hunger)) {
+        // Only check when hunger has changed (every 1000 ticks)
+        if (agent.hungerChanged && shouldTransitionToFoodStall(agent.hunger)) {
             agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
             return;
         }
@@ -199,7 +200,8 @@ export class MovingState extends AgentState {
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
         // Check if should transition to food stall based on hunger
-        if (shouldTransitionToFoodStall(agent.hunger)) {
+        // Only check when hunger has changed (every 1000 ticks)
+        if (agent.hungerChanged && shouldTransitionToFoodStall(agent.hunger)) {
             agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
             return;
         }

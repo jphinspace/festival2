@@ -323,6 +323,37 @@ describe('Agent', () => {
             expect(agent.totalTicks).toBe(600);
             expect(agent.hunger).toBe(0);
         });
+        
+        it('should set hungerChanged to true when hunger increases', () => {
+            agent.update(1.0, 800, 600); // 1000 ticks, hunger goes from 0 to 1
+            
+            expect(agent.hunger).toBe(1);
+            expect(agent.hungerChanged).toBe(true);
+        });
+        
+        it('should set hungerChanged to false when hunger does not change', () => {
+            agent.update(0.5, 800, 600); // 500 ticks, hunger stays at 0
+            
+            expect(agent.hunger).toBe(0);
+            expect(agent.hungerChanged).toBe(false);
+        });
+        
+        it('should set hungerChanged correctly across multiple updates', () => {
+            agent.update(0.5, 800, 600); // 500 ticks, hunger = 0
+            expect(agent.hungerChanged).toBe(false);
+            
+            agent.update(0.6, 800, 600); // 600 ticks, total = 1100, hunger = 1
+            expect(agent.hunger).toBe(1);
+            expect(agent.hungerChanged).toBe(true);
+            
+            agent.update(0.5, 800, 600); // 500 ticks, total = 1600, hunger = 1
+            expect(agent.hunger).toBe(1);
+            expect(agent.hungerChanged).toBe(false);
+            
+            agent.update(0.5, 800, 600); // 500 ticks, total = 2100, hunger = 2
+            expect(agent.hunger).toBe(2);
+            expect(agent.hungerChanged).toBe(true);
+        });
     });
     
     describe('update', () => {
