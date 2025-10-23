@@ -1,5 +1,8 @@
 import { Obstacle } from './Obstacle.js';
 
+// Static counter for generating unique food stall IDs
+let nextFoodStallId = 1;
+
 // FoodStall class - a type of static obstacle representing a food stall
 export class FoodStall extends Obstacle {
     /**
@@ -11,6 +14,7 @@ export class FoodStall extends Obstacle {
      */
     constructor(x, y, width, height) {
         super(x, y, width, height);
+        this.id = nextFoodStallId++;
     }
 
     /**

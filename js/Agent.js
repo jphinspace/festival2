@@ -1,9 +1,13 @@
 import { IdleState } from './AgentState.js';
 import { hasLineOfSight, hasLineOfSightSinglePath } from './Pathfinding.js';
 
+// Static counter for generating unique agent IDs
+let nextAgentId = 1;
+
 // Agent class representing festival attendees
 export class Agent {
     constructor(x, y, type = 'fan') {
+        this.id = nextAgentId++;
         this.x = x;
         this.y = y;
         this.type = type;
