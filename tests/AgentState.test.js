@@ -770,6 +770,23 @@ describe('AgentState', () => {
             expect(agent.state instanceof MovingToFoodStallState).toBe(true);
         });
         
+        it('should not transition from MovingState to MovingToFoodStallState when hunger is low', () => {
+            agent.state = new MovingState();
+            agent.state.enter(agent, 800, 600, obstacles);
+            agent.hunger = 40;
+            agent.x = 100;
+            agent.y = 100;
+            agent.destinationX = 200;
+            agent.destinationY = 200;
+            
+            // Update with 1.0 second (1000 ticks) to trigger timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
+            
+            // Should remain in MovingState, not transition to food stall
+            expect(agent.state instanceof MovingState).toBe(true);
+            expect(agent.state instanceof MovingToFoodStallState).toBe(false);
+        });
+        
         it('should not check food stall transition before 1000 ticks have elapsed', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
