@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { 
     AgentState, 
     IdleState, 
@@ -76,6 +76,66 @@ describe('AgentState', () => {
             const state = new AgentState();
             const agent = new Agent(100, 200);
             expect(() => state.exit(agent)).not.toThrow();
+        });
+        
+        it('should initialize with empty timers map', () => {
+            const state = new AgentState();
+            expect(state.timers).toBeInstanceOf(Map);
+            expect(state.timers.size).toBe(0);
+        });
+        
+        it('should add timer correctly', () => {
+            const state = new AgentState();
+            const callback = jest.fn();
+            state.addTimer('test', 1000, callback);
+            
+            expect(state.timers.has('test')).toBe(true);
+            expect(state.timers.get('test').interval).toBe(1000);
+            expect(state.timers.get('test').elapsed).toBe(0);
+        });
+        
+        it('should remove timer correctly', () => {
+            const state = new AgentState();
+            const callback = jest.fn();
+            state.addTimer('test', 1000, callback);
+            expect(state.timers.has('test')).toBe(true);
+            
+            state.removeTimer('test');
+            expect(state.timers.has('test')).toBe(false);
+        });
+        
+        it('should fire timer callback when interval elapses', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            const callback = jest.fn();
+            
+            state.addTimer('test', 1000, callback);
+            state.updateTimers(agent, 1.0, 800, 600, []);
+            
+            expect(callback).toHaveBeenCalledTimes(1);
+            expect(callback).toHaveBeenCalledWith(agent, 800, 600, []);
+        });
+        
+        it('should fire timer callback multiple times for large delta', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            const callback = jest.fn();
+            
+            state.addTimer('test', 1000, callback);
+            state.updateTimers(agent, 3.5, 800, 600, []);
+            
+            expect(callback).toHaveBeenCalledTimes(3);
+        });
+        
+        it('should not fire timer callback before interval elapses', () => {
+            const state = new AgentState();
+            const agent = new Agent(100, 200);
+            const callback = jest.fn();
+            
+            state.addTimer('test', 1000, callback);
+            state.updateTimers(agent, 0.5, 800, 600, []);
+            
+            expect(callback).not.toHaveBeenCalled();
         });
     });
     
@@ -211,10 +271,10 @@ describe('AgentState', () => {
             expect(movingState.getColor(agent)).toBe(agent.color);
         });
         
-        it('should transition to MovingToFoodStallState when hunger check passes', () => {
+        it('should transition to MovingToFoodStallState when hunger check passes after 1000 ticks', () => {
             agent.state = movingState;
+            agent.state.enter(agent, 800, 600, []);
             agent.hunger = 100; // High hunger
-            agent.hungerChanged = true; // Hunger just changed
             agent.x = 100;
             agent.y = 100;
             agent.destinationX = 200;
@@ -224,7 +284,8 @@ describe('AgentState', () => {
             const originalRandom = Math.random;
             Math.random = () => 0;
             
-            movingState.update(agent, 0.1, 800, 600, []);
+            // Update with 1.0 second (1000 ticks) to trigger timer
+            movingState.update(agent, 1.0, 800, 600, []);
             
             Math.random = originalRandom;
             
@@ -659,17 +720,17 @@ describe('AgentState', () => {
             ];
         });
         
-        it('should transition from IdleState to MovingToFoodStallState when hunger check passes', () => {
+        it('should transition from IdleState to MovingToFoodStallState when hunger check passes after 1000 ticks', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
-            agent.hungerChanged = true; // Hunger just changed
             
             // Mock Math.random to always return 0 (always transition)
             const originalRandom = Math.random;
             Math.random = () => 0;
             
-            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            // Update with 1.0 second (1000 ticks) to trigger timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
             
             Math.random = originalRandom;
             
@@ -680,18 +741,18 @@ describe('AgentState', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 40;
-            agent.hungerChanged = true; // Hunger changed but still low
             
-            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            // Update with 1.0 second (1000 ticks) to trigger timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
             
-            expect(agent.state instanceof IdleState).toBe(true);
+            // Should transition to MovingState because idleTimer expired, not to food stall
+            expect(agent.state instanceof MovingToFoodStallState).toBe(false);
         });
         
-        it('should transition from MovingState to MovingToFoodStallState when hunger check passes', () => {
+        it('should transition from MovingState to MovingToFoodStallState when hunger check passes after 1000 ticks', () => {
             agent.state = new MovingState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
-            agent.hungerChanged = true; // Hunger just changed
             agent.x = 100;
             agent.y = 100;
             agent.destinationX = 200;
@@ -701,28 +762,29 @@ describe('AgentState', () => {
             const originalRandom = Math.random;
             Math.random = () => 0;
             
-            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            // Update with 1.0 second (1000 ticks) to trigger timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
             
             Math.random = originalRandom;
             
             expect(agent.state instanceof MovingToFoodStallState).toBe(true);
         });
         
-        it('should not check food stall transition when hunger has not changed', () => {
+        it('should not check food stall transition before 1000 ticks have elapsed', () => {
             agent.state = new IdleState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
-            agent.hungerChanged = false; // Hunger did not change this update
             
             // Mock Math.random to always return 0 (would always transition if checked)
             const originalRandom = Math.random;
             Math.random = () => 0;
             
-            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            // Update with only 0.5 seconds (500 ticks) - not enough to trigger timer
+            agent.state.update(agent, 0.5, 800, 600, obstacles);
             
             Math.random = originalRandom;
             
-            // Should remain in IdleState because hunger didn't change
+            // Should remain in IdleState because timer hasn't fired yet
             expect(agent.state instanceof IdleState).toBe(true);
         });
     });

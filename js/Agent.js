@@ -37,8 +37,7 @@ export class Agent {
         
         // Hunger system
         this.hunger = 0; // starts at 0 (not hungry)
-        this.totalTicks = 0; // tracks total ticks for hunger increment
-        this.hungerChanged = false; // flag to track if hunger changed this update
+        this.totalTicks = 0; // tracks total ticks for backward compatibility
         
         // Initialize state
         this.state.enter(this, 0, 0, this.obstacles);
@@ -114,18 +113,9 @@ export class Agent {
         // Update obstacles reference
         this.obstacles = obstacles;
         
-        // Update hunger system
-        // deltaTime is in seconds, convert to ticks (1000 ticks per second)
+        // Track total ticks for backward compatibility
         const ticksElapsed = deltaTime * 1000;
         this.totalTicks += ticksElapsed;
-        
-        // Increment hunger by 1 for every 1000 ticks
-        const previousHunger = this.hunger;
-        const newHunger = Math.floor(this.totalTicks / 1000);
-        this.hunger = newHunger;
-        
-        // Set flag if hunger changed
-        this.hungerChanged = (this.hunger !== previousHunger);
         
         // Delegate to current state
         this.state.update(this, deltaTime, canvasWidth, canvasHeight, obstacles);

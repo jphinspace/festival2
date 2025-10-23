@@ -102,6 +102,55 @@ export function getDestinationInRegion(region) {
 
 // Base state class for agent state machine
 export class AgentState {
+    constructor() {
+        // Timers that can be set up by subclasses
+        this.timers = new Map();
+    }
+    
+    /**
+     * Register a timer that fires at regular intervals
+     * @param {string} name - Timer name
+     * @param {number} interval - Interval in ticks (1000 ticks = 1 second)
+     * @param {Function} callback - Function to call when timer fires
+     */
+    addTimer(name, interval, callback) {
+        this.timers.set(name, {
+            interval: interval,
+            elapsed: 0,
+            callback: callback
+        });
+    }
+    
+    /**
+     * Remove a timer
+     * @param {string} name - Timer name
+     */
+    removeTimer(name) {
+        this.timers.delete(name);
+    }
+    
+    /**
+     * Update all timers and fire callbacks when they expire
+     * @param {Agent} agent - The agent
+     * @param {number} deltaTime - Time elapsed in seconds
+     * @param {number} canvasWidth - Canvas width
+     * @param {number} canvasHeight - Canvas height
+     * @param {Array<Obstacle>} obstacles - Array of obstacles
+     */
+    updateTimers(agent, deltaTime, canvasWidth, canvasHeight, obstacles) {
+        const ticksElapsed = deltaTime * 1000;
+        
+        for (const [name, timer] of this.timers) {
+            timer.elapsed += ticksElapsed;
+            
+            // Fire callback for each complete interval
+            while (timer.elapsed >= timer.interval) {
+                timer.callback(agent, canvasWidth, canvasHeight, obstacles);
+                timer.elapsed -= timer.interval;
+            }
+        }
+    }
+    
     /**
      * Called when the agent enters this state
      * @param {Agent} agent - The agent entering this state
@@ -122,7 +171,10 @@ export class AgentState {
      * @param {Array<Obstacle>} obstacles - Array of obstacles for pathfinding
      */
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
-        // Override in subclasses
+        // Update timers first
+        this.updateTimers(agent, deltaTime, canvasWidth, canvasHeight, obstacles);
+        
+        // Override in subclasses for additional behavior
     }
     
     /**
@@ -153,23 +205,43 @@ export class AgentState {
 
 // Idle state - agent remains stationary
 export class IdleState extends AgentState {
+    constructor() {
+        super();
+    }
+    
     enter(agent, canvasWidth, canvasHeight, obstacles = []) {
         agent.idleTimer = 1000;
         agent.destinationX = agent.x;
         agent.destinationY = agent.y;
         // Reset pathfinding state when entering idle
         agent.pathState = {};
+        
+        // Set up hunger increment timer
+        this.addTimer('hungerIncrement', 1000, (agent) => {
+            agent.hunger++;
+        });
+        
+        // Set up food stall transition check timer
+        this.addTimer('foodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            if (shouldTransitionToFoodStall(agent.hunger)) {
+                agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
+            }
+        });
     }
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
-        // Check if should transition to food stall based on hunger
-        // Only check when hunger has changed (every 1000 ticks)
-        if (agent.hungerChanged && shouldTransitionToFoodStall(agent.hunger)) {
-            agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
+        // Store current state to detect transitions
+        const initialState = agent.state;
+        
+        // Update timers first (handles hunger and food stall checks)
+        super.update(agent, deltaTime, canvasWidth, canvasHeight, obstacles);
+        
+        // If state changed during timer processing, don't continue with idle logic
+        if (agent.state !== initialState) {
             return;
         }
         
-        // Decrement timer (deltaTime is in seconds, but timer is in ticks at 1000 ticks/sec)
+        // Decrement idle timer (deltaTime is in seconds, but timer is in ticks at 1000 ticks/sec)
         const ticksElapsed = deltaTime * 1000;
         agent.idleTimer -= ticksElapsed;
         
@@ -191,18 +263,38 @@ export class IdleState extends AgentState {
 
 // Moving state - agent moves toward destination using pathfinding
 export class MovingState extends AgentState {
+    constructor() {
+        super();
+    }
+    
     enter(agent, canvasWidth, canvasHeight, obstacles = []) {
         agent.idleTimer = 0;
         agent.chooseRandomDestination(canvasWidth, canvasHeight, obstacles);
         // Reset pathfinding state for new destination
         agent.pathState = {};
+        
+        // Set up hunger increment timer
+        this.addTimer('hungerIncrement', 1000, (agent) => {
+            agent.hunger++;
+        });
+        
+        // Set up food stall transition check timer
+        this.addTimer('foodStallCheck', 1000, (agent, canvasWidth, canvasHeight) => {
+            if (shouldTransitionToFoodStall(agent.hunger)) {
+                agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
+            }
+        });
     }
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
-        // Check if should transition to food stall based on hunger
-        // Only check when hunger has changed (every 1000 ticks)
-        if (agent.hungerChanged && shouldTransitionToFoodStall(agent.hunger)) {
-            agent.transitionTo(new MovingToFoodStallState(), canvasWidth, canvasHeight);
+        // Store current state to detect transitions
+        const initialState = agent.state;
+        
+        // Update timers first (handles hunger and food stall checks)
+        super.update(agent, deltaTime, canvasWidth, canvasHeight, obstacles);
+        
+        // If state changed during timer processing, don't continue with movement logic
+        if (agent.state !== initialState) {
             return;
         }
         
@@ -251,6 +343,10 @@ export class MovingState extends AgentState {
 
 // Moving to food stall state - agent moves toward a food stall region
 export class MovingToFoodStallState extends AgentState {
+    constructor() {
+        super();
+    }
+    
     enter(agent, canvasWidth, canvasHeight, obstacles = []) {
         agent.idleTimer = 0;
         
@@ -269,9 +365,15 @@ export class MovingToFoodStallState extends AgentState {
         
         // Reset pathfinding state for new destination
         agent.pathState = {};
+        
+        // No hunger increment while eating - agent is focused on getting food
+        // No food stall transition check - agent is already going to food
     }
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
+        // Update timers (none set up, but call super for consistency)
+        super.update(agent, deltaTime, canvasWidth, canvasHeight, obstacles);
+        
         // Calculate distance to destination
         const dx = agent.destinationX - agent.x;
         const dy = agent.destinationY - agent.y;
