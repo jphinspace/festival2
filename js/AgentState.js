@@ -274,7 +274,6 @@ export class MovingState extends AgentState {
         
         // Set up hunger timer (increment only, no food stall transition in MovingState)
         this.addTimer('hungerIncrement', 1000, (agent, canvasWidth, canvasHeight) => {
-            // Increment hunger only - MovingState cannot transition to food stall
             agent.hunger++;
         });
     }
