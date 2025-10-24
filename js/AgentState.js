@@ -279,16 +279,8 @@ export class MovingState extends AgentState {
     }
     
     update(agent, deltaTime, canvasWidth, canvasHeight, obstacles = []) {
-        // Store current state to detect transitions
-        const initialState = agent.state;
-        
-        // Update timers first (handles hunger and food stall checks)
+        // Update timers first (hunger increment only in MovingState)
         super.update(agent, deltaTime, canvasWidth, canvasHeight, obstacles);
-        
-        // If state changed during timer processing, don't continue with movement logic
-        if (agent.state !== initialState) {
-            return;
-        }
         
         // Calculate distance to destination
         const dx = agent.destinationX - agent.x;
