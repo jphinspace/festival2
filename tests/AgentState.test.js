@@ -271,7 +271,7 @@ describe('AgentState', () => {
             expect(movingState.getColor(agent)).toBe(agent.color);
         });
         
-        it('should transition to MovingToFoodStallState when hunger check passes after 1000 ticks', () => {
+        it('should increment hunger but not transition to MovingToFoodStallState after 1000 ticks', () => {
             agent.state = movingState;
             agent.state.enter(agent, 800, 600, []);
             agent.hunger = 100; // High hunger
@@ -280,16 +280,15 @@ describe('AgentState', () => {
             agent.destinationX = 200;
             agent.destinationY = 200;
             
-            // Mock Math.random to always return 0 (always transition)
-            const originalRandom = Math.random;
-            Math.random = () => 0;
+            const initialHunger = agent.hunger;
             
             // Update with 1.0 second (1000 ticks) to trigger timer
             movingState.update(agent, 1.0, 800, 600, []);
             
-            Math.random = originalRandom;
-            
-            expect(agent.state instanceof MovingToFoodStallState).toBe(true);
+            // Hunger should increment but state should remain MovingState
+            expect(agent.hunger).toBe(initialHunger + 1);
+            expect(agent.state instanceof MovingState).toBe(true);
+            expect(agent.state instanceof MovingToFoodStallState).toBe(false);
         });
     });
     
@@ -749,7 +748,7 @@ describe('AgentState', () => {
             expect(agent.state instanceof MovingToFoodStallState).toBe(false);
         });
         
-        it('should transition from MovingState to MovingToFoodStallState when hunger check passes after 1000 ticks', () => {
+        it('should not transition from MovingState to MovingToFoodStallState even with high hunger', () => {
             agent.state = new MovingState();
             agent.state.enter(agent, 800, 600, obstacles);
             agent.hunger = 100;
@@ -758,16 +757,15 @@ describe('AgentState', () => {
             agent.destinationX = 200;
             agent.destinationY = 200;
             
-            // Mock Math.random to always return 0 (always transition)
-            const originalRandom = Math.random;
-            Math.random = () => 0;
+            const initialHunger = agent.hunger;
             
             // Update with 1.0 second (1000 ticks) to trigger timer
             agent.state.update(agent, 1.0, 800, 600, obstacles);
             
-            Math.random = originalRandom;
-            
-            expect(agent.state instanceof MovingToFoodStallState).toBe(true);
+            // Should remain in MovingState and increment hunger
+            expect(agent.state instanceof MovingState).toBe(true);
+            expect(agent.state instanceof MovingToFoodStallState).toBe(false);
+            expect(agent.hunger).toBe(initialHunger + 1);
         });
         
         it('should not transition from MovingState to MovingToFoodStallState when hunger is low', () => {
@@ -803,6 +801,44 @@ describe('AgentState', () => {
             
             // Should remain in IdleState because timer hasn't fired yet
             expect(agent.state instanceof IdleState).toBe(true);
+        });
+        
+        it('should only allow food stall transition from IdleState, not from MovingState', () => {
+            // Start in MovingState with high hunger
+            agent.state = new MovingState();
+            agent.state.enter(agent, 800, 600, obstacles);
+            agent.hunger = 100; // Very high hunger
+            agent.x = 100;
+            agent.y = 100;
+            agent.destinationX = 200;
+            agent.destinationY = 200;
+            
+            // Mock Math.random to always return 0 (would always transition if checked)
+            const originalRandom = Math.random;
+            Math.random = () => 0;
+            
+            // Update with 1.0 second to trigger hunger timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
+            
+            // Should still be in MovingState (no food stall transition)
+            expect(agent.state instanceof MovingState).toBe(true);
+            expect(agent.hunger).toBe(101); // Hunger should have incremented
+            
+            // Now transition to IdleState by reaching destination
+            agent.x = 198;
+            agent.y = 198;
+            agent.state.update(agent, 0.1, 800, 600, obstacles);
+            
+            // Should now be in IdleState
+            expect(agent.state instanceof IdleState).toBe(true);
+            
+            // Update with 1.0 second to trigger hunger and food stall check timer
+            agent.state.update(agent, 1.0, 800, 600, obstacles);
+            
+            Math.random = originalRandom;
+            
+            // NOW should transition to MovingToFoodStallState from IdleState
+            expect(agent.state instanceof MovingToFoodStallState).toBe(true);
         });
     });
 });
