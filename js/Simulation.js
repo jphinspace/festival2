@@ -2,6 +2,7 @@ import { Agent } from './Agent.js';
 import { Obstacle } from './Obstacle.js';
 import { Wall } from './Wall.js';
 import { FoodStall } from './FoodStall.js';
+import { Stage } from './Stage.js';
 import { SpecialMovementZone } from './SpecialMovementZone.js';
 
 // Simulation class
@@ -46,6 +47,24 @@ export class Simulation {
         for (let i = 0; i < 4; i++) {
             this.obstacles.push(new FoodStall(centerX, yPositions[i], obstacleSize, obstacleSize));
         }
+        
+        // Create stage on left side of festival with walls above and below
+        const stageWidth = 100;
+        const stageHeight = 60;
+        const stageX = 150; // Left side of festival
+        const stageY = centerY; // Vertically centered
+        const stage = new Stage(stageX, stageY, stageWidth, stageHeight);
+        this.obstacles.push(stage);
+        
+        // Add wall above stage (touching)
+        const wallAboveHeight = 20;
+        const wallAboveY = stageY - (stageHeight / 2) - (wallAboveHeight / 2);
+        this.obstacles.push(new Wall(stageX, wallAboveY, stageWidth, wallAboveHeight));
+        
+        // Add wall below stage (touching)
+        const wallBelowHeight = 20;
+        const wallBelowY = stageY + (stageHeight / 2) + (wallBelowHeight / 2);
+        this.obstacles.push(new Wall(stageX, wallBelowY, stageWidth, wallBelowHeight));
         
         // Create entranceway zone with walls
         // Wall dimensions: height = ~1/5 of canvas height, width = ~45% of canvas width
