@@ -92,7 +92,7 @@ describe('Simulation', () => {
         it('should create four food stall obstacles in a vertical line', () => {
             const simulation = new Simulation(canvas);
             
-            expect(simulation.obstacles.length).toBe(6); // 4 food stalls + 2 walls
+            expect(simulation.obstacles.length).toBe(9); // 4 food stalls + 1 stage + 2 stage walls + 2 entrance walls
             
             // First 4 obstacles should be food stalls in a vertical line
             // with original square dimensions (40x40)
@@ -138,9 +138,9 @@ describe('Simulation', () => {
         it('should create two wall obstacles at the bottom', () => {
             const simulation = new Simulation(canvas);
             
-            // Last two obstacles should be walls
-            const leftWall = simulation.obstacles[4];
-            const rightWall = simulation.obstacles[5];
+            // Last two obstacles should be entrance walls (indices 7 and 8)
+            const leftWall = simulation.obstacles[7];
+            const rightWall = simulation.obstacles[8];
             
             // Walls should have proper dimensions (45% width, 20% height)
             const expectedWidth = canvas.width * 0.45;
