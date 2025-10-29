@@ -263,6 +263,20 @@ describe('OverlapPrevention', () => {
             expect(capped.vx).toBe(10);
             expect(capped.vy).toBe(10);
         });
+        
+        it('should cap Y component when it would cause collision', () => {
+            const agent = new Agent(100, 100);
+            const obstacle = new Obstacle(100, 120, 20, 20); // Below agent
+            const obstacles = [obstacle];
+            
+            const antiOverlapVector = { vx: 0, vy: 100 }; // Moving down
+            const deltaTime = 0.1;
+            
+            const capped = capAntiOverlapVector(agent, antiOverlapVector, obstacles, deltaTime);
+            
+            expect(capped.vx).toBe(0);
+            expect(capped.vy).toBe(0); // Y should be capped
+        });
     });
     
     describe('calculateFinalAntiOverlapVector', () => {

@@ -785,6 +785,42 @@ describe('Agent', () => {
             expect(mockCtx.moveTo).not.toHaveBeenCalled();
             expect(mockCtx.lineTo).not.toHaveBeenCalled();
         });
+        
+        it('should draw anti-overlap vector when magnitude is greater than 0', () => {
+            const agent = new Agent(100, 100);
+            agent.antiOverlapVx = 50;
+            agent.antiOverlapVy = 30;
+            
+            // Track strokeStyle values when stroke() is called
+            const strokeStyles = [];
+            const fillStyles = [];
+            
+            // Mock canvas context
+            const mockCtx = {
+                fillStyle: '',
+                strokeStyle: '',
+                lineWidth: 0,
+                beginPath: jest.fn(),
+                arc: jest.fn(),
+                fill: jest.fn(() => {
+                    fillStyles.push(mockCtx.fillStyle);
+                }),
+                stroke: jest.fn(() => {
+                    strokeStyles.push(mockCtx.strokeStyle);
+                }),
+                moveTo: jest.fn(),
+                lineTo: jest.fn(),
+                closePath: jest.fn()
+            };
+            
+            agent.draw(mockCtx, true); // showDestination = true
+            
+            // Should draw the anti-overlap vector with red stroke
+            expect(strokeStyles).toContain('#FF0000');
+            // Should draw the arrowhead with red fill
+            expect(fillStyles).toContain('#FF0000');
+            expect(mockCtx.closePath).toHaveBeenCalled(); // Arrowhead uses closePath
+        });
     });
     
     describe('getSpeed', () => {
