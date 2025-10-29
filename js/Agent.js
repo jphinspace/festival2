@@ -1,6 +1,10 @@
 import { IdleState } from './AgentState.js';
 import { hasLineOfSight, hasLineOfSightSinglePath } from './Pathfinding.js';
 
+// Constants
+const ANTI_OVERLAP_VISUAL_SCALE = 0.1; // Scale factor for visualizing anti-overlap vectors
+const ARROW_SIZE = 5; // Size of arrowhead for anti-overlap vector visualization
+
 // Static counter for generating unique agent IDs
 let nextAgentId = 1;
 
@@ -216,9 +220,8 @@ export class Agent {
             
             if (antiOverlapMagnitude > 0) {
                 // Scale the vector for visualization (make it visible but not overwhelming)
-                const visualScale = 0.1;
-                const endX = this.x + this.antiOverlapVx * visualScale;
-                const endY = this.y + this.antiOverlapVy * visualScale;
+                const endX = this.x + this.antiOverlapVx * ANTI_OVERLAP_VISUAL_SCALE;
+                const endY = this.y + this.antiOverlapVy * ANTI_OVERLAP_VISUAL_SCALE;
                 
                 ctx.strokeStyle = '#FF0000'; // Red for anti-overlap vector
                 ctx.lineWidth = 2;
@@ -228,19 +231,18 @@ export class Agent {
                 ctx.stroke();
                 
                 // Draw arrowhead
-                const arrowSize = 5;
                 const angle = Math.atan2(this.antiOverlapVy, this.antiOverlapVx);
                 
                 ctx.fillStyle = '#FF0000';
                 ctx.beginPath();
                 ctx.moveTo(endX, endY);
                 ctx.lineTo(
-                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
-                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                    endX - ARROW_SIZE * Math.cos(angle - Math.PI / 6),
+                    endY - ARROW_SIZE * Math.sin(angle - Math.PI / 6)
                 );
                 ctx.lineTo(
-                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
-                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                    endX - ARROW_SIZE * Math.cos(angle + Math.PI / 6),
+                    endY - ARROW_SIZE * Math.sin(angle + Math.PI / 6)
                 );
                 ctx.closePath();
                 ctx.fill();

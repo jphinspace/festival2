@@ -6,6 +6,10 @@
  * that pushes them away from overlapping agents.
  */
 
+// Constants
+const OVERLAP_FORCE_MULTIPLIER = 10; // Multiplier for overlap magnitude to make effect noticeable
+const POSITION_TOLERANCE = 0.001; // Tolerance for detecting agents at exact same position
+
 /**
  * Detects if two agents overlap (their circles intersect)
  * @param {Agent} agent1 - First agent
@@ -64,7 +68,7 @@ export function calculateAntiOverlapVector(fromAgent, toAgent) {
     
     // Magnitude proportional to overlap amount
     // Using a multiplier to make the effect more noticeable
-    const magnitude = overlap * 10;
+    const magnitude = overlap * OVERLAP_FORCE_MULTIPLIER;
     
     return {
         vx: dirX * magnitude,
@@ -84,7 +88,7 @@ export function handleCompleteOverlap(agent1, agent2) {
     const distance = Math.sqrt(dx * dx + dy * dy);
     
     // Check if agents are at exact same position (within floating point tolerance)
-    if (distance < 0.001) {
+    if (distance < POSITION_TOLERANCE) {
         agent2.x += 1;
     }
 }
