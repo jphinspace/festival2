@@ -646,8 +646,8 @@ describe('Agent', () => {
             agent.draw(mockCtx, true);
             
             // Should draw three lines: left edge, right edge, and centerline
-            // The final strokeStyle should be red when obstructed
-            expect(mockCtx.strokeStyle).toBe('#FF0000');
+            // The final strokeStyle should be yellow when obstructed
+            expect(mockCtx.strokeStyle).toBe('#FFFF00');
             expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
@@ -763,15 +763,15 @@ describe('Agent', () => {
             agent.draw(mockCtx, true);
             
             // We expect to see a mix of colors:
-            // - Left edge (y=95) should be RED (obstructed)
+            // - Left edge (y=95) should be YELLOW (obstructed)
             // - Right edge (y=105) should be TEAL (clear)
             // - Center (y=100) should be TEAL (clear)
             
-            // strokeStyles should contain both red and teal
-            const hasRed = strokeStyles.some(s => s === 'rgba(255, 0, 0, 1.0)' || s === '#FF0000');
+            // strokeStyles should contain both yellow and teal
+            const hasYellow = strokeStyles.some(s => s === 'rgba(255, 255, 0, 1.0)' || s === '#FFFF00');
             const hasTeal = strokeStyles.some(s => s === 'rgba(0, 206, 209, 1.0)' || s === '#00CED1');
             
-            expect(hasRed).toBe(true); // At least one line is red (obstructed)
+            expect(hasYellow).toBe(true); // At least one line is yellow (obstructed)
             expect(hasTeal).toBe(true); // At least one line is teal (clear)
         });
         

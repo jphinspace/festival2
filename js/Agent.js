@@ -180,7 +180,7 @@ export class Agent {
                 );
                 
                 // Draw left edge line with its own color
-                const leftColor = leftLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                const leftColor = leftLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 255, 0, 1.0)';
                 ctx.strokeStyle = leftColor;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -189,7 +189,7 @@ export class Agent {
                 ctx.stroke();
                 
                 // Draw right edge line with its own color
-                const rightColor = rightLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                const rightColor = rightLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 255, 0, 1.0)';
                 ctx.strokeStyle = rightColor;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -205,7 +205,7 @@ export class Agent {
                 this.obstacles,
                 this.radius  // Use agent radius for center path
             );
-            ctx.strokeStyle = centerLosIsClear ? '#00CED1' : '#FF0000';
+            ctx.strokeStyle = centerLosIsClear ? '#00CED1' : '#FFFF00';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
