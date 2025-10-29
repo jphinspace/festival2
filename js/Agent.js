@@ -39,6 +39,10 @@ export class Agent {
         this.hunger = 0; // starts at 0 (not hungry)
         this.totalTicks = 0; // tracks total ticks for backward compatibility
         
+        // Anti-overlap velocity vector
+        this.antiOverlapVx = 0;
+        this.antiOverlapVy = 0;
+        
         // Initialize state
         this.state.enter(this, 0, 0, this.obstacles);
     }
@@ -203,6 +207,44 @@ export class Agent {
             ctx.moveTo(this.x, this.y);
             ctx.lineTo(this.destinationX, this.destinationY);
             ctx.stroke();
+            
+            // Draw anti-overlap velocity vector in red
+            const antiOverlapMagnitude = Math.sqrt(
+                this.antiOverlapVx * this.antiOverlapVx + 
+                this.antiOverlapVy * this.antiOverlapVy
+            );
+            
+            if (antiOverlapMagnitude > 0) {
+                // Scale the vector for visualization (make it visible but not overwhelming)
+                const visualScale = 0.1;
+                const endX = this.x + this.antiOverlapVx * visualScale;
+                const endY = this.y + this.antiOverlapVy * visualScale;
+                
+                ctx.strokeStyle = '#FF0000'; // Red for anti-overlap vector
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                // Draw arrowhead
+                const arrowSize = 5;
+                const angle = Math.atan2(this.antiOverlapVy, this.antiOverlapVx);
+                
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
         }
         
         // Draw agent using state color

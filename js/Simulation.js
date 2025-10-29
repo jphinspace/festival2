@@ -4,6 +4,7 @@ import { Wall } from './Wall.js';
 import { FoodStall } from './FoodStall.js';
 import { Stage } from './Stage.js';
 import { SpecialMovementZone } from './SpecialMovementZone.js';
+import { calculateFinalAntiOverlapVector } from './OverlapPrevention.js';
 
 // Simulation class
 export class Simulation {
@@ -250,11 +251,33 @@ export class Simulation {
         // deltaTime is in seconds, adjusted by tick rate
         const deltaTime = (deltaTimeMs / 1000) * this.tickRate;
         
-        // Update all agents
+        // Calculate anti-overlap vectors for all agents first
+        for (const agent of this.agents) {
+            const antiOverlapVector = calculateFinalAntiOverlapVector(
+                agent,
+                this.agents,
+                this.obstacles,
+                deltaTime
+            );
+            agent.antiOverlapVx = antiOverlapVector.vx;
+            agent.antiOverlapVy = antiOverlapVector.vy;
+        }
+        
+        // Update all agents with their pathfinding movement
         for (const agent of this.agents) {
             agent.obstacles = this.obstacles;
             agent.specialMovementZones = this.specialMovementZones;
             agent.update(deltaTime, this.canvas.width, this.canvas.height, this.obstacles);
+        }
+        
+        // Apply anti-overlap velocity to agents after pathfinding movement
+        for (const agent of this.agents) {
+            agent.x += agent.antiOverlapVx * deltaTime;
+            agent.y += agent.antiOverlapVy * deltaTime;
+            
+            // Clamp position to canvas bounds after applying anti-overlap
+            agent.x = Math.max(agent.radius, Math.min(this.canvas.width - agent.radius, agent.x));
+            agent.y = Math.max(agent.radius, Math.min(this.canvas.height - agent.radius, agent.y));
         }
     }
     
