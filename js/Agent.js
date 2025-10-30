@@ -2,7 +2,7 @@ import { IdleState } from './AgentState.js';
 import { hasLineOfSight, hasLineOfSightSinglePath } from './Pathfinding.js';
 
 // Constants
-const ANTI_OVERLAP_VISUAL_SCALE = 0.1; // Scale factor for visualizing anti-overlap vectors
+const ANTI_OVERLAP_VISUAL_SCALE = 1.0; // Scale factor for visualizing anti-overlap vectors
 const ARROW_SIZE = 5; // Size of arrowhead for anti-overlap vector visualization
 
 // Static counter for generating unique agent IDs
