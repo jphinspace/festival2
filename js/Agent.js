@@ -1,6 +1,10 @@
 import { IdleState } from './AgentState.js';
 import { hasLineOfSight, hasLineOfSightSinglePath } from './Pathfinding.js';
 
+// Constants
+const ANTI_OVERLAP_VISUAL_SCALE = 1.0; // Scale factor for visualizing anti-overlap vectors
+const ARROW_SIZE = 5; // Size of arrowhead for anti-overlap vector visualization
+
 // Static counter for generating unique agent IDs
 let nextAgentId = 1;
 
@@ -38,6 +42,10 @@ export class Agent {
         // Hunger system
         this.hunger = 0; // starts at 0 (not hungry)
         this.totalTicks = 0; // tracks total ticks for backward compatibility
+        
+        // Anti-overlap velocity vector
+        this.antiOverlapVx = 0;
+        this.antiOverlapVy = 0;
         
         // Initialize state
         this.state.enter(this, 0, 0, this.obstacles);
@@ -172,7 +180,7 @@ export class Agent {
                 );
                 
                 // Draw left edge line with its own color
-                const leftColor = leftLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                const leftColor = leftLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 255, 0, 1.0)';
                 ctx.strokeStyle = leftColor;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -181,7 +189,7 @@ export class Agent {
                 ctx.stroke();
                 
                 // Draw right edge line with its own color
-                const rightColor = rightLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 0, 0, 1.0)';
+                const rightColor = rightLosIsClear ? 'rgba(0, 206, 209, 1.0)' : 'rgba(255, 255, 0, 1.0)';
                 ctx.strokeStyle = rightColor;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -197,12 +205,48 @@ export class Agent {
                 this.obstacles,
                 this.radius  // Use agent radius for center path
             );
-            ctx.strokeStyle = centerLosIsClear ? '#00CED1' : '#FF0000';
+            ctx.strokeStyle = centerLosIsClear ? '#00CED1' : '#FFFF00';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
             ctx.lineTo(this.destinationX, this.destinationY);
             ctx.stroke();
+            
+            // Draw anti-overlap velocity vector in red
+            const antiOverlapMagnitude = Math.sqrt(
+                this.antiOverlapVx * this.antiOverlapVx + 
+                this.antiOverlapVy * this.antiOverlapVy
+            );
+            
+            if (antiOverlapMagnitude > 0) {
+                // Scale the vector for visualization (make it visible but not overwhelming)
+                const endX = this.x + this.antiOverlapVx * ANTI_OVERLAP_VISUAL_SCALE;
+                const endY = this.y + this.antiOverlapVy * ANTI_OVERLAP_VISUAL_SCALE;
+                
+                ctx.strokeStyle = '#FF0000'; // Red for anti-overlap vector
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                // Draw arrowhead
+                const angle = Math.atan2(this.antiOverlapVy, this.antiOverlapVx);
+                
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                    endX - ARROW_SIZE * Math.cos(angle - Math.PI / 6),
+                    endY - ARROW_SIZE * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    endX - ARROW_SIZE * Math.cos(angle + Math.PI / 6),
+                    endY - ARROW_SIZE * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
         }
         
         // Draw agent using state color

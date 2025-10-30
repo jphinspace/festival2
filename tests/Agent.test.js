@@ -646,8 +646,8 @@ describe('Agent', () => {
             agent.draw(mockCtx, true);
             
             // Should draw three lines: left edge, right edge, and centerline
-            // The final strokeStyle should be red when obstructed
-            expect(mockCtx.strokeStyle).toBe('#FF0000');
+            // The final strokeStyle should be yellow when obstructed
+            expect(mockCtx.strokeStyle).toBe('#FFFF00');
             expect(mockCtx.stroke).toHaveBeenCalled();
         });
         
@@ -763,15 +763,15 @@ describe('Agent', () => {
             agent.draw(mockCtx, true);
             
             // We expect to see a mix of colors:
-            // - Left edge (y=95) should be RED (obstructed)
+            // - Left edge (y=95) should be YELLOW (obstructed)
             // - Right edge (y=105) should be TEAL (clear)
             // - Center (y=100) should be TEAL (clear)
             
-            // strokeStyles should contain both red and teal
-            const hasRed = strokeStyles.some(s => s === 'rgba(255, 0, 0, 1.0)' || s === '#FF0000');
+            // strokeStyles should contain both yellow and teal
+            const hasYellow = strokeStyles.some(s => s === 'rgba(255, 255, 0, 1.0)' || s === '#FFFF00');
             const hasTeal = strokeStyles.some(s => s === 'rgba(0, 206, 209, 1.0)' || s === '#00CED1');
             
-            expect(hasRed).toBe(true); // At least one line is red (obstructed)
+            expect(hasYellow).toBe(true); // At least one line is yellow (obstructed)
             expect(hasTeal).toBe(true); // At least one line is teal (clear)
         });
         
@@ -784,6 +784,42 @@ describe('Agent', () => {
             
             expect(mockCtx.moveTo).not.toHaveBeenCalled();
             expect(mockCtx.lineTo).not.toHaveBeenCalled();
+        });
+        
+        it('should draw anti-overlap vector when magnitude is greater than 0', () => {
+            const agent = new Agent(100, 100);
+            agent.antiOverlapVx = 50;
+            agent.antiOverlapVy = 30;
+            
+            // Track strokeStyle values when stroke() is called
+            const strokeStyles = [];
+            const fillStyles = [];
+            
+            // Mock canvas context
+            const mockCtx = {
+                fillStyle: '',
+                strokeStyle: '',
+                lineWidth: 0,
+                beginPath: jest.fn(),
+                arc: jest.fn(),
+                fill: jest.fn(() => {
+                    fillStyles.push(mockCtx.fillStyle);
+                }),
+                stroke: jest.fn(() => {
+                    strokeStyles.push(mockCtx.strokeStyle);
+                }),
+                moveTo: jest.fn(),
+                lineTo: jest.fn(),
+                closePath: jest.fn()
+            };
+            
+            agent.draw(mockCtx, true); // showDestination = true
+            
+            // Should draw the anti-overlap vector with red stroke
+            expect(strokeStyles).toContain('#FF0000');
+            // Should draw the arrowhead with red fill
+            expect(fillStyles).toContain('#FF0000');
+            expect(mockCtx.closePath).toHaveBeenCalled(); // Arrowhead uses closePath
         });
     });
     
