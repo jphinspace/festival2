@@ -74,18 +74,36 @@ export function getFoodStallRegions(obstacles) {
 /**
  * Choose a random food stall region
  * @param {Array<Obstacle>} obstacles - Array of obstacles
+ * @param {number} agentX - Optional X position of the agent
+ * @param {number} centerX - Optional X position of the center line (food stalls)
  * @returns {Object|null} Random region or null if no regions found
  */
-export function chooseRandomFoodStallRegion(obstacles) {
+export function chooseRandomFoodStallRegion(obstacles, agentX = null, centerX = null) {
     const regions = getFoodStallRegions(obstacles);
     
     if (regions.length === 0) {
         return null;
     }
     
-    // Random selection (d8 for 8 regions: 4 stalls × 2 sides)
-    const randomIndex = Math.floor(Math.random() * regions.length);
-    return regions[randomIndex];
+    // If agent position is provided, filter regions by side
+    let filteredRegions = regions;
+    if (agentX !== null && centerX !== null) {
+        // Determine which side the agent is on
+        // Note: When agentX === centerX, agent is treated as being on the right side
+        const agentSide = agentX < centerX ? 'left' : 'right';
+        
+        // Filter regions to only those on the same side as the agent
+        filteredRegions = regions.filter(region => region.side === agentSide);
+        
+        // If no regions on the same side (shouldn't happen), fallback to all regions
+        if (filteredRegions.length === 0) {
+            filteredRegions = regions;
+        }
+    }
+    
+    // Random selection from filtered regions
+    const randomIndex = Math.floor(Math.random() * filteredRegions.length);
+    return filteredRegions[randomIndex];
 }
 
 /**
@@ -334,8 +352,11 @@ export class MovingToFoodStallState extends AgentState {
     enter(agent, canvasWidth, canvasHeight, obstacles = []) {
         agent.idleTimer = 0;
         
-        // Choose a random food stall region
-        const region = chooseRandomFoodStallRegion(obstacles);
+        // Calculate center X (where food stalls are located)
+        const centerX = canvasWidth / 2;
+        
+        // Choose a random food stall region on the same side as the agent
+        const region = chooseRandomFoodStallRegion(obstacles, agent.x, centerX);
         
         if (region) {
             // Set destination to a random point within the region
