@@ -89,6 +89,7 @@ export function chooseRandomFoodStallRegion(obstacles, agentX = null, centerX = 
     let filteredRegions = regions;
     if (agentX !== null && centerX !== null) {
         // Determine which side the agent is on
+        // Note: When agentX === centerX, agent is treated as being on the right side
         const agentSide = agentX < centerX ? 'left' : 'right';
         
         // Filter regions to only those on the same side as the agent
