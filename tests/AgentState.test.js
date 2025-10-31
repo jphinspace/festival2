@@ -841,4 +841,75 @@ describe('AgentState', () => {
             expect(agent.state instanceof MovingToFoodStallState).toBe(true);
         });
     });
+    
+    describe('chooseRandomFoodStallRegion with agent position', () => {
+        it('should choose left region when agent is on the left side', () => {
+            // Food stall at x=400 (center), agent at x=200 (left side)
+            const obstacles = [new FoodStall(400, 300, 40, 40)];
+            const agentX = 200;
+            const centerX = 400;
+            
+            // Test multiple times to ensure consistency
+            for (let i = 0; i < 10; i++) {
+                const region = chooseRandomFoodStallRegion(obstacles, agentX, centerX);
+                expect(region.side).toBe('left');
+            }
+        });
+        
+        it('should choose right region when agent is on the right side', () => {
+            // Food stall at x=400 (center), agent at x=600 (right side)
+            const obstacles = [new FoodStall(400, 300, 40, 40)];
+            const agentX = 600;
+            const centerX = 400;
+            
+            // Test multiple times to ensure consistency
+            for (let i = 0; i < 10; i++) {
+                const region = chooseRandomFoodStallRegion(obstacles, agentX, centerX);
+                expect(region.side).toBe('right');
+            }
+        });
+        
+        it('should choose right region when agent is at center', () => {
+            // Food stall at x=400 (center), agent at x=400 (at center)
+            const obstacles = [new FoodStall(400, 300, 40, 40)];
+            const agentX = 400;
+            const centerX = 400;
+            
+            // Test multiple times to ensure consistency
+            for (let i = 0; i < 10; i++) {
+                const region = chooseRandomFoodStallRegion(obstacles, agentX, centerX);
+                expect(region.side).toBe('right');
+            }
+        });
+        
+        it('should randomly select from multiple food stalls on the same side', () => {
+            // Multiple food stalls at x=400, agent on left at x=200
+            const obstacles = [
+                new FoodStall(400, 170, 40, 40),
+                new FoodStall(400, 300, 40, 40),
+                new FoodStall(400, 430, 40, 40)
+            ];
+            const agentX = 200;
+            const centerX = 400;
+            
+            // Test multiple times to get different stalls
+            const selectedStallIds = new Set();
+            for (let i = 0; i < 30; i++) {
+                const region = chooseRandomFoodStallRegion(obstacles, agentX, centerX);
+                expect(region.side).toBe('left');
+                selectedStallIds.add(region.stallId);
+            }
+            
+            // Should select from multiple stalls (at least 2 different ones in 30 attempts)
+            expect(selectedStallIds.size).toBeGreaterThan(1);
+        });
+        
+        it('should fallback to random selection when no position provided', () => {
+            // Backward compatibility test
+            const obstacles = [new FoodStall(400, 300, 40, 40)];
+            const region = chooseRandomFoodStallRegion(obstacles);
+            expect(region).not.toBeNull();
+            expect(['left', 'right']).toContain(region.side);
+        });
+    });
 });
